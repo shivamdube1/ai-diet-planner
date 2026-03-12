@@ -1,0 +1,697 @@
+{% extends "base.html" %}
+
+{% block title %}Health Analysis Questionnaire — NutriAI{% endblock %}
+
+{% block content %}
+<div class="questionnaire-page">
+    <div class="container py-5">
+
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <span class="section-tag">Step-by-Step Analysis</span>
+            <h2 class="page-title mt-2">Tell Us About Yourself</h2>
+            <p class="page-sub">Answer 10 quick sections to get your personalized diet plan</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <!-- Progress Bar -->
+        <div class="q-progress-container mb-4">
+            <div class="q-progress-bar">
+                <div class="q-progress-fill" id="progressFill" style="width: 10%"></div>
+            </div>
+            <div class="q-progress-text">
+                <span id="progressLabel">Section 1 of 10</span>
+                <span id="progressPct">10%</span>
+            </div>
+        </div>
+
+        <!-- Step Indicators -->
+        <div class="step-indicators d-none d-md-flex mb-4">
+            {% for i in range(1, 11) %}
+            <div class="step-dot {% if i == 1 %}active{% endif %}" id="step-dot-{{ i }}" data-step="{{ i }}">
+                <span>{{ i }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- FORM -->
+        <form method="POST" action="{{ url_for('analyze') }}" id="healthForm" novalidate>
+
+            <!-- SECTION 1: Personal Info -->
+            <div class="q-section active" id="section-1">
+                <div class="q-card">
+                    <div class="q-section-header">
+                        <div class="q-section-icon">👤</div>
+                        <div>
+                            <h4>Personal Information</h4>
+                            <p>Basic details to calculate your health metrics</p>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" class="form-control q-input" name="name" placeholder="Your name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control q-input" name="email" placeholder="your@email.com">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Age *</label>
+                            <input type="number" class="form-control q-input" name="age" min="10" max="100" placeholder="25" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Gender *</label>
+                            <select class="form-select q-input" name="gender" required>
+                                <option value="">Select</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Country</label>
+                            <input type="text" class="form-control q-input" name="country" placeholder="India" value="India">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Height (cm) *</label>
+                            <input type="number" class="form-control q-input" name="height" min="100" max="250" placeholder="170" required>
+                            <small class="form-text text-muted">e.g. 5'7" = 170 cm</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Weight (kg) *</label>
+                            <input type="number" class="form-control q-input" name="weight" min="20" max="300" step="0.1" placeholder="70" required>
+                        </div>
+                    </div>
+
+                    <!-- Live BMI Preview -->
+                    <div class="bmi-preview mt-3" id="bmiPreview" style="display:none;">
+                        <div class="bmi-preview-label">Live BMI Preview</div>
+                        <div class="bmi-value-large" id="bmiValue">—</div>
+                        <div class="bmi-category" id="bmiCategory">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: Body Goal -->
+            <div class="q-section" id="section-2">
+                <div class="q-card">
+                    <div class="q-section-header">
+                        <div class="q-section-icon">🎯</div>
+                        <div>
+                            <h4>Your Body Goal</h4>
+                            <p>What do you want to achieve?</p>
+                        </div>
+                    </div>
+                    <div class="goal-cards">
+                        <label class="goal-card">
+                            <input type="radio" name="goal" value="weight_loss" required>
+                            <div class="goal-card-inner">
+                                <span class="goal-icon">⬇️</span>
+                                <h5>Weight Loss</h5>
+                                <p>Reduce body fat with a calorie deficit plan</p>
+                            </div>
+                        </label>
+                        <label class="goal-card">
+                            <input type="radio" name="goal" value="muscle_gain">
+                            <div class="goal-card-inner">
+                                <span class="goal-icon">💪</span>
+                                <h5>Muscle Gain</h5>
+                                <p>Build lean muscle with caloric surplus</p>
+                            </div>
+                        </label>
+                        <label class="goal-card">
+                            <input type="radio" name="goal" value="maintain">
+                            <div class="goal-card-inner">
+                                <span class="goal-icon">⚖️</span>
+                                <h5>Maintain Weight</h5>
+                                <p>Stay at current weight with balanced nutrition</p>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Target Weight (kg) — Optional</label>
+                        <input type="number" class="form-control q-input" name="target_weight" placeholder="e.g. 65" min="20" max="300" step="0.1" style="max-width: 200px;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: Diet Preference -->
+            <div class="q-section" id="section-3">
+                <div class="q-card">
+                    <div class="q-section-header">
+                        <div class="q-section-icon">🥦</div>
+                        <div>
+                            <h4>Diet Preference</h4>
+                            <p>Tell us your food preferences and restrictions</p>
+                        </div>
+                    </div>
+                    <div class="goal-cards">
+                        <label class="goal-card">
+                            <input type="radio" name="diet_type" value="vegetarian" required>
+                            <div class="goal-card-inner">
+                                <span class="goal-icon">🥦</span>
+                                <h5>Vegetarian</h5>
+                                <p>No meat, includes dairy & eggs</p>
+                            </div>
+                        </label>
+                        <label class="goal-card">
+                            <input type="radio" name="diet_type" value="non_vegetarian">
+                            <div class="goal-card-inner">
+                                <span class="goal-icon">🍗</span>
+                                <h5>Non-Vegetarian</h5>
+                                <p>Includes all food groups</p>
+                            </div>
+                        </label>
+                        <label class="goal-card">
+                            <input type="radio" name="diet_type" value="vegan">
+                            <div class="goal-card-inner">
+                                <span class="goal-icon">🌱</span>
+                                <h5>Vegan</h5>
+                                <p>No animal products</p>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Food Allergies / Restrictions</label>
+                            <input type="text" class="form-control q-input" name="food_allergies" placeholder="e.g. peanuts, gluten, lactose">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Budget Preference</label>
+                            <select class="form-select q-input" name="budget_preference">
+                                <option value="low">Low (Budget-friendly)</option>
+                                <option value="moderate" selected>Moderate</option>
+                                <option value="high">High (Premium ingredients)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 4: 24H Meal Intake -->
+            <div class="q-section" id="section-4">
+                <div class="q-card">
+                    <div class="q-section-header">
+                        <div class="q-section-icon">🍽️</div>
+                        <div>
+                            <h4>Current Eating Habits</h4>
+                            <p>What do you typically eat in a day?</p>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">🌅 Breakfast Foods</label>
+                            <input type="text" class="form-control q-input" name="breakfast_foods" placeholder="e.g. 2 rotis + sabzi, tea">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">☀️ Lunch Foods</label>
+                            <input type="text" class="form-control q-input" name="lunch_foods" placeholder="e.g. rice + dal + salad">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">🌙 Dinner Foods</label>
+                            <input type="text" class="form-control q-input" name="dinner_foods" placeholder="e.g. chapati + dal + curd">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">🍎 Snacks</label>
+                            <input type="text" class="form-control q-input" name="snacks" placeholder="e.g. biscuits, fruits, chai">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">☕ Beverages</label>
+                            <input type="text" class="form-control q-input" name="beverages" placeholder="e.g. 3 cups tea, cold drinks">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Meals Per Day</label>
+                            <select class="form-select q-input" name="meals_per_day">
+                                <option value="2">2 meals</option>
+                                <option value="3" selected>3 meals</option>
+                                <option value="4">4 meals</option>
+                                <option value="5">5+ meals</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Outside Food Frequency</label>
+                            <select class="form-select q-input" name="outside_food_frequency">
+                                <option value="rarely">Rarely (once a month)</option>
+                                <option value="occasionally" selected>Occasionally (2-3x/week)</option>
+                                <option value="often">Often (4-5x/week)</option>
+                                <option value="daily">Daily</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Junk Food Per Week</label>
+                            <select class="form-select q-input" name="junk_food_frequency">
+                                <option value="0">Never</option>
+                                <option value="1-2" selected>1-2 times</option>
+                                <option value="3-4">3-4 times</option>
+                                <option value="5+">5+ times</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 5: Physical Activity -->
+            <div class="q-section" id="section-5">
+                <div class="q-card">
+                    <div class="q-section-header">
+                        <div class="q-section-icon">🏃</div>
+                        <div>
+                            <h4>Physical Activity</h4>
+                            <p>How active are you in your daily life?</p>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-600">Exercise Frequency per Week</label>
+                        <div class="radio-pills">
+                            <label class="radio-pill">
+                                <input type="radio" name="exercise_frequency" value="0">
+                                <span>No Exercise</span>
+                            </label>
+                            <label class="radio-pill">
+                                <input type="radio" name="exercise_frequency" value="1-2" checked>
+                                <span>1–2 Days</span>
+                            </label>
+                            <label class="radio-pill">
+                                <input type="radio" name="exercise_frequency" value="3-5">
+                                <span>3–5 Days</span>
+                            </label>
+                            <label class="radio-pill">
+                                <input type="radio" name="exercise_frequency" value="6-7">
+                                <span>6–7 Days</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-600">Exercise Type (select all that apply)</label>
+                        <div class="checkbox-pills">
+                            {% for type in ['Gym', 'Yoga', 'Running', 'Walking', 'Sports', 'Cycling', 'Swimming'] %}
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="exercise_type" value="{{ type }}">
+                                <span>{{ type }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label fw-600">Daily Step Count</label>
+                        <div class="radio-pills">
+                            <label class="radio-pill">
+                                <input type="radio" name="daily_steps" value="<3000">
+                                <span>Under 3,000</span>
+                            </label>
+                            <label class="radio-pill">
+                                <input type="radio" name="daily_steps" value="3000-6000" checked>
+                                <span>3,000–6,000</span>
+                            </label>
+                            <label class="radio-pill">
+                                <input type="radio" name="daily_steps" value="6000-10000">
+                                <span>6,000–10,000</span>
+                            </label>
+                            <label class="radio-pill">
+                                <input type="radio" name="daily_steps" value=">10000">
+                                <span>10,000+</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 6: Sleep -->
+            <div class="q-section" id="section-6">
+                <div class="q-card">
+                    <div class="q-section-header">
+                        <div class="q-section-icon">😴</div>
+                        <div>
+                            <h4>Sleep Analysis</h4>
+                            <p>Sleep quality deeply affects metabolism and weight</p>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Average Sleep Hours</label>
+                            <input type="number" class="form-control q-input" name="sleep_hours" min="2" max="14" step="0.5" placeholder="7" value="7">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Night Wakeups (per night)</label>
+                            <input type="number" class="form-control q-input" name="night_wakeups" min="0" max="10" placeholder="0" value="0">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-600">Sleep Quality</label>
+                            <div class="radio-pills">
+                                {% for q in ['poor', 'average', 'good', 'excellent'] %}
+                                <label class="radio-pill">
+                                    <input type="radio" name="sleep_quality" value="{{ q }}" {% if q == 'average' %}checked{% endif %}>
+                                    <span>{{ q.title() }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-600">Daytime Fatigue</label>
+                            <div class="radio-pills">
+                                {% for f in ['never', 'sometimes', 'often', 'always'] %}
+                                <label class="radio-pill">
+                                    <input type="radio" name="daytime_fatigue" value="{{ f }}" {% if f == 'sometimes' %}checked{% endif %}>
+                                    <span>{{ f.title() }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 7: Stress -->
+            <div class="q-section" id="section-7">
+                <div class="q-card">
+                    <div class="q-section-header">
+                        <div class="q-section-icon">🧠</div>
+                        <div>
+                            <h4>Stress Analysis</h4>
+                            <p>Stress hormones directly impact weight and metabolism</p>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-600">Current Stress Level</label>
+                        <div class="stress-cards">
+                            <label class="stress-card stress-low">
+                                <input type="radio" name="stress_level" value="low">
+                                <div>😊<br><strong>Low</strong><br><small>Feeling calm</small></div>
+                            </label>
+                            <label class="stress-card stress-mod">
+                                <input type="radio" name="stress_level" value="moderate" checked>
+                                <div>😐<br><strong>Moderate</strong><br><small>Some pressure</small></div>
+                            </label>
+                            <label class="stress-card stress-high">
+                                <input type="radio" name="stress_level" value="high">
+                                <div>😰<br><strong>High</strong><br><small>Very stressed</small></div>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label fw-600">Main Stress Sources (select all that apply)</label>
+                        <div class="checkbox-pills">
+                            {% for src in ['Work', 'Study', 'Family', 'Financial', 'Health', 'Relationships'] %}
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="stress_sources" value="{{ src }}">
+                                <span>{{ src }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 8: Work Schedule -->
+            <div class="q-section" id="section-8">
+                <div class="q-card">
+                    <div class="q-section-header">
+                        <div class="q-section-icon">💼</div>
+                        <div>
+                            <h4>Work Schedule</h4>
+                            <p>Your work routine affects your energy needs</p>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Working Hours Per Day</label>
+                            <input type="number" class="form-control q-input" name="work_hours" min="0" max="24" placeholder="8" value="8">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-600">Work Type</label>
+                            <div class="work-cards">
+                                <label class="work-card">
+                                    <input type="radio" name="work_type" value="sedentary" checked>
+                                    <div class="work-card-inner">
+                                        <span>🖥️</span>
+                                        <strong>Sedentary</strong>
+                                        <small>Desk job, minimal movement</small>
+                                    </div>
+                                </label>
+                                <label class="work-card">
+                                    <input type="radio" name="work_type" value="mixed">
+                                    <div class="work-card-inner">
+                                        <span>🚶</span>
+                                        <strong>Mixed Activity</strong>
+                                        <small>Combination of sitting and moving</small>
+                                    </div>
+                                </label>
+                                <label class="work-card">
+                                    <input type="radio" name="work_type" value="physical">
+                                    <div class="work-card-inner">
+                                        <span>⚒️</span>
+                                        <strong>Physical Labor</strong>
+                                        <small>Manual, active work</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 9: Meal Timing -->
+            <div class="q-section" id="section-9">
+                <div class="q-card">
+                    <div class="q-section-header">
+                        <div class="q-section-icon">⏰</div>
+                        <div>
+                            <h4>Meal Timing</h4>
+                            <p>When you eat matters as much as what you eat</p>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">🌅 Breakfast Time</label>
+                            <input type="time" class="form-control q-input" name="breakfast_time" value="08:00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">☀️ Lunch Time</label>
+                            <input type="time" class="form-control q-input" name="lunch_time" value="13:00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">🌙 Dinner Time</label>
+                            <input type="time" class="form-control q-input" name="dinner_time" value="20:00">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-600">Late Night Eating Habit</label>
+                            <div class="radio-pills">
+                                {% for h in ['never', 'rarely', 'sometimes', 'often'] %}
+                                <label class="radio-pill">
+                                    <input type="radio" name="late_night_eating" value="{{ h }}" {% if h == 'rarely' %}checked{% endif %}>
+                                    <span>{{ h.title() }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 10: Water Intake -->
+            <div class="q-section" id="section-10">
+                <div class="q-card">
+                    <div class="q-section-header">
+                        <div class="q-section-icon">💧</div>
+                        <div>
+                            <h4>Water Intake</h4>
+                            <p>Hydration is critical for metabolism and performance</p>
+                        </div>
+                    </div>
+                    <div class="water-cards">
+                        <label class="water-card">
+                            <input type="radio" name="water_intake" value="<1 liter">
+                            <div class="water-card-inner">
+                                <span class="water-icon">💧</span>
+                                <strong>Less than 1L</strong>
+                                <small>Low — increase urgently</small>
+                            </div>
+                        </label>
+                        <label class="water-card">
+                            <input type="radio" name="water_intake" value="1-2 liters" checked>
+                            <div class="water-card-inner">
+                                <span class="water-icon">💧💧</span>
+                                <strong>1–2 Liters</strong>
+                                <small>Below optimal</small>
+                            </div>
+                        </label>
+                        <label class="water-card">
+                            <input type="radio" name="water_intake" value="2-3 liters">
+                            <div class="water-card-inner">
+                                <span class="water-icon">💧💧💧</span>
+                                <strong>2–3 Liters</strong>
+                                <small>Recommended range</small>
+                            </div>
+                        </label>
+                        <label class="water-card">
+                            <input type="radio" name="water_intake" value=">3 liters">
+                            <div class="water-card-inner">
+                                <span class="water-icon">💧💧💧💧</span>
+                                <strong>3+ Liters</strong>
+                                <small>Excellent hydration</small>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Final Review Summary -->
+                    <div class="final-review mt-4">
+                        <h5 class="mb-3">✅ You're Almost Done!</h5>
+                        <p>Click the button below to generate your AI-powered personalized diet plan. This may take 15–30 seconds.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="q-nav-buttons">
+                <button type="button" class="btn btn-outline-secondary btn-lg" id="prevBtn" style="display:none;" onclick="changeSection(-1)">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </button>
+                <button type="button" class="btn btn-primary-custom btn-lg" id="nextBtn" onclick="changeSection(1)">
+                    Next <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+                <button type="submit" class="btn btn-success-custom btn-lg" id="submitBtn" style="display:none;">
+                    <i class="bi bi-lightning-charge-fill me-2"></i>Generate My Diet Plan
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- AI Loading Overlay -->
+<div class="ai-loading-overlay" id="aiLoadingOverlay">
+    <div class="ai-loading-content">
+        <div class="ai-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+        </div>
+        <div class="ai-loading-icon">🤖</div>
+        <h3 class="ai-loading-title">Analyzing Your Health Profile</h3>
+        <p class="ai-loading-sub" id="loadingMessage">Calculating BMI, BMR & TDEE...</p>
+        <div class="loading-steps">
+            <div class="loading-step active" id="lstep1">📊 Calculating metrics</div>
+            <div class="loading-step" id="lstep2">🤖 AI generating meal plan</div>
+            <div class="loading-step" id="lstep3">🍽️ Curating your recipes</div>
+            <div class="loading-step" id="lstep4">✨ Personalizing recommendations</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Multi-step form logic
+let currentSection = 1;
+const totalSections = 10;
+
+function updateProgress() {
+    const pct = (currentSection / totalSections) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressLabel').textContent = `Section ${currentSection} of ${totalSections}`;
+    document.getElementById('progressPct').textContent = Math.round(pct) + '%';
+
+    // Update step dots
+    for (let i = 1; i <= totalSections; i++) {
+        const dot = document.getElementById(`step-dot-${i}`);
+        if (dot) {
+            dot.classList.toggle('active', i === currentSection);
+            dot.classList.toggle('done', i < currentSection);
+        }
+    }
+
+    // Update buttons
+    document.getElementById('prevBtn').style.display = currentSection > 1 ? 'inline-flex' : 'none';
+    document.getElementById('nextBtn').style.display = currentSection < totalSections ? 'inline-flex' : 'none';
+    document.getElementById('submitBtn').style.display = currentSection === totalSections ? 'inline-flex' : 'none';
+}
+
+function changeSection(dir) {
+    const sections = document.querySelectorAll('.q-section');
+    sections[currentSection - 1].classList.remove('active');
+    currentSection = Math.min(Math.max(currentSection + dir, 1), totalSections);
+    sections[currentSection - 1].classList.add('active');
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Allow clicking step dots to navigate
+document.querySelectorAll('.step-dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+        const target = parseInt(dot.dataset.step);
+        const sections = document.querySelectorAll('.q-section');
+        sections[currentSection - 1].classList.remove('active');
+        currentSection = target;
+        sections[currentSection - 1].classList.add('active');
+        updateProgress();
+    });
+});
+
+// Live BMI Calculator
+function updateBMI() {
+    const h = parseFloat(document.querySelector('[name=height]')?.value);
+    const w = parseFloat(document.querySelector('[name=weight]')?.value);
+    if (h > 0 && w > 0) {
+        const bmi = w / ((h / 100) ** 2);
+        const bmiDisplay = document.getElementById('bmiValue');
+        const catDisplay = document.getElementById('bmiCategory');
+        const preview = document.getElementById('bmiPreview');
+
+        if (bmiDisplay) {
+            bmiDisplay.textContent = bmi.toFixed(1);
+            let cat = '', cls = '';
+            if (bmi < 18.5) { cat = 'Underweight'; cls = 'bmi-low'; }
+            else if (bmi < 25) { cat = 'Normal Weight ✓'; cls = 'bmi-normal'; }
+            else if (bmi < 30) { cat = 'Overweight'; cls = 'bmi-over'; }
+            else { cat = 'Obese'; cls = 'bmi-obese'; }
+
+            catDisplay.textContent = cat;
+            catDisplay.className = 'bmi-category ' + cls;
+            preview.style.display = 'block';
+        }
+    }
+}
+
+document.querySelector('[name=height]')?.addEventListener('input', updateBMI);
+document.querySelector('[name=weight]')?.addEventListener('input', updateBMI);
+
+// Loading animation sequence
+function runLoadingAnimation() {
+    const messages = [
+        "Calculating BMI, BMR & TDEE...",
+        "AI is analyzing your lifestyle...",
+        "Curating personalized Indian recipes...",
+        "Adding lifestyle recommendations..."
+    ];
+    const steps = ['lstep1', 'lstep2', 'lstep3', 'lstep4'];
+    let i = 0;
+    const interval = setInterval(() => {
+        i++;
+        if (i < messages.length) {
+            document.getElementById('loadingMessage').textContent = messages[i];
+            steps.forEach((id, idx) => {
+                document.getElementById(id)?.classList.toggle('active', idx === i);
+                document.getElementById(id)?.classList.toggle('done', idx < i);
+            });
+        }
+        if (i >= messages.length - 1) clearInterval(interval);
+    }, 3000);
+}
+
+// Form submit
+document.getElementById('healthForm').addEventListener('submit', function(e) {
+    document.getElementById('aiLoadingOverlay').style.display = 'flex';
+    runLoadingAnimation();
+});
+
+updateProgress();
+</script>
+{% endblock %}

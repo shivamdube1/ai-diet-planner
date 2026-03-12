@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}NutriAI — AI-Powered Personalized Diet Planner{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-bg-decor"></div>
+    <div class="container">
+        <div class="row align-items-center min-vh-screen">
+            <div class="col-lg-6">
+                <div class="hero-badge">
+                    <i class="bi bi-stars"></i> AI-Powered Nutrition Science
+                </div>
+                <h1 class="hero-title">
+                    Get Your <span class="text-accent">AI-Powered</span><br>
+                    Personalized Diet Plan<br>
+                    in <span class="text-accent">30 Seconds</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Analyze your health, lifestyle, and daily habits to generate a scientifically optimized meal plan tailored just for you.
+                </p>
+                <div class="hero-actions">
+                    <a href="{{ url_for('questionnaire') }}" class="btn btn-primary-custom btn-lg">
+                        <i class="bi bi-lightning-charge-fill me-2"></i>Start Free Health Analysis
+                    </a>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-num">10+</span>
+                            <span class="stat-label">Factors Analyzed</span>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat">
+                            <span class="stat-num">7-Day</span>
+                            <span class="stat-label">Meal Plan</span>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat">
+                            <span class="stat-num">100%</span>
+                            <span class="stat-label">Personalized</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="hero-visual">
+                    <div class="hero-card hero-card-1">
+                        <div class="card-icon">🥗</div>
+                        <div>
+                            <div class="card-title">Today's Lunch</div>
+                            <div class="card-sub">Dal Tadka + 2 Roti</div>
+                        </div>
+                        <div class="card-cal">450 kcal</div>
+                    </div>
+                    <div class="hero-card hero-card-2">
+                        <div class="card-icon">⚡</div>
+                        <div>
+                            <div class="card-title">BMR Calculated</div>
+                            <div class="card-sub">1,847 kcal/day</div>
+                        </div>
+                    </div>
+                    <div class="hero-card hero-card-3">
+                        <div class="card-icon">📈</div>
+                        <div>
+                            <div class="card-title">Health Score</div>
+                            <div class="progress-mini">
+                                <div class="progress-fill" style="width: 78%"></div>
+                            </div>
+                            <div class="card-sub">78/100 — Good</div>
+                        </div>
+                    </div>
+                    <div class="hero-card hero-card-4">
+                        <div class="card-icon">💧</div>
+                        <div>
+                            <div class="card-title">Hydration Goal</div>
+                            <div class="card-sub">2.5L — On Track</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="section-how">
+    <div class="container">
+        <div class="section-header text-center">
+            <span class="section-tag">Simple Process</span>
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-sub">Three steps to your personalized nutrition plan</p>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-md-4">
+                <div class="how-card">
+                    <div class="how-step">01</div>
+                    <div class="how-icon">📋</div>
+                    <h4>Answer Health Questions</h4>
+                    <p>Share details about your body, lifestyle, eating habits, sleep patterns, and fitness goals.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="how-card how-card-featured">
+                    <div class="how-step">02</div>
+                    <div class="how-icon">🤖</div>
+                    <h4>AI Analyzes Your Lifestyle</h4>
+                    <p>Our AI calculates your BMI, BMR, TDEE and analyzes 10+ health factors for deep insights.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="how-card">
+                    <div class="how-step">03</div>
+                    <div class="how-icon">🍽️</div>
+                    <h4>Receive Your Diet Plan</h4>
+                    <p>Get a complete 7-day meal plan with macros, grocery lists, and lifestyle recommendations.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Benefits Section -->
+<section class="section-benefits">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-5">
+                <span class="section-tag">Why NutriAI</span>
+                <h2 class="section-title">Science-Backed<br>Personalized Nutrition</h2>
+                <p class="section-sub">We don't believe in one-size-fits-all diets. Every plan is calculated using validated formulas and tailored to your unique profile.</p>
+                <a href="{{ url_for('questionnaire') }}" class="btn btn-primary-custom mt-3">
+                    Start Your Analysis <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="col-lg-7">
+                <div class="benefits-grid">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🎯</div>
+                        <div>
+                            <h5>Personalized Nutrition</h5>
+                            <p>Custom macros and meals based on your exact body composition and goals</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🔬</div>
+                        <div>
+                            <h5>Scientific Formulas</h5>
+                            <p>BMI, BMR, TDEE calculated using Mifflin-St Jeor and other validated methods</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🌿</div>
+                        <div>
+                            <h5>Lifestyle Improvement</h5>
+                            <p>Get actionable tips for sleep, hydration, stress management, and activity</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">📊</div>
+                        <div>
+                            <h5>Progress Monitoring</h5>
+                            <p>Track your weight journey with visual charts and milestone tracking</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🛒</div>
+                        <div>
+                            <h5>Grocery List Included</h5>
+                            <p>Get a ready-made shopping list for every ingredient in your meal plan</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🇮🇳</div>
+                        <div>
+                            <h5>Indian Food Options</h5>
+                            <p>Practical, affordable meals using locally available Indian ingredients</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Metrics Preview -->
+<section class="section-metrics">
+    <div class="container">
+        <div class="section-header text-center">
+            <span class="section-tag">What We Analyze</span>
+            <h2 class="section-title">Comprehensive Health Analysis</h2>
+        </div>
+        <div class="row g-3 mt-2">
+            {% set metrics = [
+                ('⚖️', 'BMI', 'Body Mass Index classification'),
+                ('🔥', 'BMR', 'Basal Metabolic Rate'),
+                ('⚡', 'TDEE', 'Total Daily Energy Expenditure'),
+                ('😴', 'Sleep Quality', 'Impact on metabolism'),
+                ('🧠', 'Stress Levels', 'Cortisol and weight gain'),
+                ('🚶', 'Activity', 'Exercise and step analysis'),
+                ('💧', 'Hydration', 'Daily water intake'),
+                ('🍕', 'Eating Habits', 'Current meal patterns')
+            ] %}
+            {% for icon, name, desc in metrics %}
+            <div class="col-6 col-md-3">
+                <div class="metric-card">
+                    <span class="metric-icon">{{ icon }}</span>
+                    <h6>{{ name }}</h6>
+                    <small>{{ desc }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="section-cta">
+    <div class="container text-center">
+        <h2>Ready to Transform Your Health?</h2>
+        <p>Join thousands who've discovered their perfect personalized diet plan</p>
+        <a href="{{ url_for('questionnaire') }}" class="btn btn-cta-white btn-lg">
+            <i class="bi bi-lightning-charge-fill me-2"></i>Get Your Free Diet Plan
+        </a>
+    </div>
+</section>
+
+{% endblock %}
