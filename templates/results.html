@@ -1,279 +1,389 @@
 {% extends "base.html" %}
-
 {% block title %}Your Personalized Diet Plan — NutriAI{% endblock %}
 
 {% block content %}
 <div class="results-page">
-    <div class="container py-5">
+  <div class="container py-5">
 
-        <!-- Results Header -->
-        <div class="results-header text-center mb-5">
-            <div class="results-celebration">🎉</div>
-            <h1>Your Personalized Plan is Ready, {{ user.name.split()[0] }}!</h1>
-            <p class="results-sub">Generated on {{ plan.created_at[:10] if plan.created_at else 'Today' }} • Based on your complete health profile</p>
-            <div class="results-cta-row">
-                <a href="{{ url_for('dashboard', user_id=user.id) }}" class="btn btn-primary-custom">
-                    <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
-                </a>
-                <button onclick="window.print()" class="btn btn-outline-secondary ms-2">
-                    <i class="bi bi-printer me-2"></i>Print / Save PDF
-                </button>
-            </div>
-        </div>
-
-        <!-- Health Metrics Row -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
-                <div class="metric-result-card">
-                    <div class="metric-result-icon">⚖️</div>
-                    <div class="metric-result-value">{{ plan.bmi }}</div>
-                    <div class="metric-result-label">BMI</div>
-                    <div class="metric-result-badge badge-{{ 'success' if plan.bmi_category == 'Normal' else 'warning' if plan.bmi_category == 'Overweight' else 'danger' }}">
-                        {{ plan.bmi_category }}
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="metric-result-card">
-                    <div class="metric-result-icon">🔥</div>
-                    <div class="metric-result-value">{{ plan.bmr|int }}</div>
-                    <div class="metric-result-label">BMR (kcal/day)</div>
-                    <div class="metric-result-badge badge-info">Resting Rate</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="metric-result-card">
-                    <div class="metric-result-icon">⚡</div>
-                    <div class="metric-result-value">{{ plan.tdee|int }}</div>
-                    <div class="metric-result-label">TDEE (kcal/day)</div>
-                    <div class="metric-result-badge badge-info">Maintenance</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="metric-result-card featured">
-                    <div class="metric-result-icon">🎯</div>
-                    <div class="metric-result-value">{{ plan.daily_calories|int }}</div>
-                    <div class="metric-result-label">Daily Target (kcal)</div>
-                    <div class="metric-result-badge badge-success">Your Goal</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Macros + Health Score Row -->
-        <div class="row g-4 mb-4">
-            <div class="col-lg-6">
-                <div class="results-card">
-                    <h5 class="card-section-title">
-                        <i class="bi bi-pie-chart-fill me-2"></i>Daily Macronutrients
-                    </h5>
-                    <div class="macros-display">
-                        <div class="macro-item macro-protein">
-                            <div class="macro-circle">
-                                <span class="macro-val">{{ plan.protein|int }}g</span>
-                            </div>
-                            <div class="macro-name">Protein</div>
-                            <div class="macro-cal">{{ (plan.protein * 4)|int }} kcal</div>
-                        </div>
-                        <div class="macro-item macro-carbs">
-                            <div class="macro-circle">
-                                <span class="macro-val">{{ plan.carbs|int }}g</span>
-                            </div>
-                            <div class="macro-name">Carbs</div>
-                            <div class="macro-cal">{{ (plan.carbs * 4)|int }} kcal</div>
-                        </div>
-                        <div class="macro-item macro-fats">
-                            <div class="macro-circle">
-                                <span class="macro-val">{{ plan.fats|int }}g</span>
-                            </div>
-                            <div class="macro-name">Fats</div>
-                            <div class="macro-cal">{{ (plan.fats * 9)|int }} kcal</div>
-                        </div>
-                    </div>
-                    <canvas id="macroChart" height="200"></canvas>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="results-card">
-                    <h5 class="card-section-title">
-                        <i class="bi bi-heart-pulse-fill me-2"></i>Health Analysis
-                    </h5>
-                    <div class="health-score-display text-center mb-3">
-                        <div class="health-score-circle score-{{ health_analysis.score_label[1] }}">
-                            <span class="health-score-num">{{ health_analysis.health_score }}</span>
-                            <span class="health-score-100">/100</span>
-                        </div>
-                        <div class="health-score-label mt-2 text-{{ health_analysis.score_label[1] }}">
-                            {{ health_analysis.score_label[0] }}
-                        </div>
-                    </div>
-                    <div class="health-insights">
-                        {% for insight in health_analysis.insights[:3] %}
-                        <div class="insight-item insight-positive">
-                            <i class="bi bi-check-circle-fill me-2"></i>{{ insight }}
-                        </div>
-                        {% endfor %}
-                        {% for warning in health_analysis.warnings[:3] %}
-                        <div class="insight-item insight-warning">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ warning }}
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 7-Day Meal Plan -->
-        <div class="results-card mb-4">
-            <h5 class="card-section-title">
-                <i class="bi bi-calendar-week-fill me-2"></i>Your 7-Day Personalized Meal Plan
-            </h5>
-            <p class="text-muted small mb-3">Based on Indian cuisine — practical, affordable, and nutritious</p>
-
-            <!-- Day Tabs -->
-            <ul class="nav nav-pills meal-day-tabs mb-3 flex-nowrap overflow-auto" id="dayTabs">
-                {% for day in days %}
-                <li class="nav-item">
-                    <button class="nav-link {% if loop.first %}active{% endif %}"
-                            data-bs-toggle="pill"
-                            data-bs-target="#day-{{ day }}">
-                        {{ day[:3] }}
-                    </button>
-                </li>
-                {% endfor %}
-            </ul>
-
-            <div class="tab-content" id="dayTabContent">
-                {% for day in days %}
-                <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="day-{{ day }}">
-                    <div class="row g-3">
-                        {% set meals = [('breakfast', '🌅', 'Breakfast'), ('lunch', '☀️', 'Lunch'), ('dinner', '🌙', 'Dinner'), ('snacks', '🍎', 'Snacks')] %}
-                        {% for meal_key, icon, label in meals %}
-                        {% if week_plan[day] and week_plan[day][meal_key] %}
-                        {% set meal = week_plan[day][meal_key] %}
-                        <div class="col-md-6 col-xl-3">
-                            <div class="meal-card">
-                                <div class="meal-card-header">
-                                    <span class="meal-icon">{{ icon }}</span>
-                                    <span class="meal-type">{{ label }}</span>
-                                    <span class="meal-calories">{{ meal.get('calories', 0) }} kcal</span>
-                                </div>
-                                <div class="meal-card-body">
-                                    <h6 class="meal-name">{{ meal.get('meal', '—') }}</h6>
-                                    <p class="meal-desc">{{ meal.get('description', '') }}</p>
-                                    <div class="meal-macros">
-                                        <span class="macro-tag protein-tag">P: {{ meal.get('protein', 0) }}g</span>
-                                        <span class="macro-tag carb-tag">C: {{ meal.get('carbs', 0) }}g</span>
-                                        <span class="macro-tag fat-tag">F: {{ meal.get('fats', 0) }}g</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Lifestyle Tips + Grocery -->
-        <div class="row g-4 mb-4">
-            <div class="col-lg-7">
-                <div class="results-card h-100">
-                    <h5 class="card-section-title">
-                        <i class="bi bi-lightbulb-fill me-2"></i>Lifestyle Recommendations
-                    </h5>
-                    <div class="tips-list">
-                        {% for tip in lifestyle_tips %}
-                        <div class="tip-item">
-                            <div class="tip-number">{{ loop.index }}</div>
-                            <p>{{ tip }}</p>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-5">
-                <div class="results-card h-100">
-                    <h5 class="card-section-title">
-                        <i class="bi bi-bag-check-fill me-2"></i>User Summary
-                    </h5>
-                    <div class="user-summary-grid">
-                        <div class="summary-row">
-                            <span class="summary-label">Goal</span>
-                            <span class="summary-value">{{ user.goal.replace('_', ' ').title() }}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span class="summary-label">Diet Type</span>
-                            <span class="summary-value">{{ user.diet_type.replace('_', ' ').title() }}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span class="summary-label">Activity</span>
-                            <span class="summary-value">{{ user.activity_level.replace('_', ' ').title() }}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span class="summary-label">Age / Gender</span>
-                            <span class="summary-value">{{ user.age }} / {{ user.gender.title() }}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span class="summary-label">Height / Weight</span>
-                            <span class="summary-value">{{ user.height }}cm / {{ user.weight }}kg</span>
-                        </div>
-                        <div class="summary-row">
-                            <span class="summary-label">Sleep</span>
-                            <span class="summary-value">{{ user.sleep_hours }}h ({{ user.sleep_quality.title() if user.sleep_quality else '—' }})</span>
-                        </div>
-                        <div class="summary-row">
-                            <span class="summary-label">Stress Level</span>
-                            <span class="summary-value">{{ user.stress_level.title() if user.stress_level else '—' }}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span class="summary-label">Water Intake</span>
-                            <span class="summary-value">{{ user.water_intake or '—' }}</span>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <a href="{{ url_for('dashboard', user_id=user.id) }}" class="btn btn-primary-custom w-100">
-                            <i class="bi bi-graph-up me-2"></i>Track My Progress
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+    <!-- Header -->
+    <div class="results-header text-center mb-5">
+      <div class="results-celebration">🎉</div>
+      <h1>Your Plan is Ready, {{ user.name.split()[0] }}!</h1>
+      <p class="results-sub">Generated {{ plan.created_at[:10] if plan.created_at else 'Today' }} · Based on Harvard Healthy Eating Plate & UK Eatwell Guide</p>
+      <div class="results-cta-row">
+        <a href="{{ url_for('dashboard', user_id=user.id) }}" class="btn btn-primary-custom">
+          <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-secondary ms-2">
+          <i class="bi bi-printer me-2"></i>Print / Save PDF
+        </button>
+      </div>
     </div>
+
+    <!-- Health Metrics Row -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="metric-result-card">
+          <div class="metric-result-icon">⚖️</div>
+          <div class="metric-result-value">{{ plan.bmi }}</div>
+          <div class="metric-result-label">BMI</div>
+          <div class="metric-result-badge badge-{{ 'success' if plan.bmi_category == 'Normal' else 'warning' if plan.bmi_category == 'Overweight' else 'danger' }}">{{ plan.bmi_category }}</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="metric-result-card">
+          <div class="metric-result-icon">🔥</div>
+          <div class="metric-result-value">{{ plan.bmr|int }}</div>
+          <div class="metric-result-label">BMR (kcal/day)</div>
+          <div class="metric-result-badge badge-info">Resting Rate</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="metric-result-card">
+          <div class="metric-result-icon">⚡</div>
+          <div class="metric-result-value">{{ plan.tdee|int }}</div>
+          <div class="metric-result-label">TDEE (kcal/day)</div>
+          <div class="metric-result-badge badge-info">Maintenance</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="metric-result-card featured">
+          <div class="metric-result-icon">🎯</div>
+          <div class="metric-result-value">{{ plan.daily_calories|int }}</div>
+          <div class="metric-result-label">Daily Target (kcal)</div>
+          <div class="metric-result-badge badge-success">Your Goal</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         EATWELL + HARVARD PLATE VISUAL SECTION
+    ══════════════════════════════════════════════ -->
+    <div class="results-card mb-4 eatwell-section">
+      <h5 class="card-section-title">
+        <i class="bi bi-circle-half me-2"></i>Your Plate Blueprint — Harvard + Eatwell Guide
+      </h5>
+      <p class="text-muted small mb-4">Every meal in your plan is designed around these evidence-based proportions</p>
+
+      <div class="row align-items-center g-4">
+        <!-- Visual Plate -->
+        <div class="col-lg-5 text-center">
+          <div class="plate-visual-container">
+            <canvas id="platePieChart" width="280" height="280"></canvas>
+            <div class="plate-center-label">
+              <span>Your</span>
+              <span>Plate</span>
+            </div>
+          </div>
+          <div class="plate-legend mt-3">
+            <div class="plate-legend-item"><span class="legend-dot" style="background:#4ade80"></span>Vegetables 37%</div>
+            <div class="plate-legend-item"><span class="legend-dot" style="background:#f59e0b"></span>Whole Grains 25%</div>
+            <div class="plate-legend-item"><span class="legend-dot" style="background:#f87171"></span>Healthy Protein 25%</div>
+            <div class="plate-legend-item"><span class="legend-dot" style="background:#fb923c"></span>Fruits 13%</div>
+          </div>
+        </div>
+
+        <!-- Plate Rules -->
+        <div class="col-lg-7">
+          <div class="plate-rules-grid">
+            <div class="plate-rule-card veg-card">
+              <div class="plate-rule-icon">🥦</div>
+              <div class="plate-rule-content">
+                <strong>Vegetables — Largest Portion</strong>
+                <p>Fill ~37% of your plate. Aim for 5-a-day (Eatwell). Use variety: spinach, bhindi, broccoli, carrot, tomato. Potatoes don't count.</p>
+              </div>
+            </div>
+            <div class="plate-rule-card grain-card">
+              <div class="plate-rule-icon">🌾</div>
+              <div class="plate-rule-content">
+                <strong>Whole Grains — Quarter Plate</strong>
+                <p>Whole wheat roti, brown rice, oats, daliya. Avoid maida and white rice. Choose higher-fibre versions (Eatwell).</p>
+              </div>
+            </div>
+            <div class="plate-rule-card protein-card">
+              <div class="plate-rule-icon">🫘</div>
+              <div class="plate-rule-content">
+                <strong>Healthy Protein — Quarter Plate</strong>
+                <p>Dal, rajma, chana, eggs, fish (2x/week per Eatwell), poultry. Limit red meat. Avoid processed meats entirely.</p>
+              </div>
+            </div>
+            <div class="plate-rule-card fruit-card">
+              <div class="plate-rule-icon">🍎</div>
+              <div class="plate-rule-content">
+                <strong>Fruits — Colourful Variety</strong>
+                <p>Eat plenty of fruits of all colours. Limit juice to 150ml/day (Eatwell). Banana, papaya, apple, guava, orange.</p>
+              </div>
+            </div>
+            <div class="plate-rule-card oil-card">
+              <div class="plate-rule-icon">🫒</div>
+              <div class="plate-rule-content">
+                <strong>Healthy Oils — Small Amounts</strong>
+                <p>Mustard oil, olive oil, rice bran oil (unsaturated). Limit butter and ghee. Avoid trans fats / vanaspati.</p>
+              </div>
+            </div>
+            <div class="plate-rule-card water-card">
+              <div class="plate-rule-icon">💧</div>
+              <div class="plate-rule-content">
+                <strong>Water — 6–8 Glasses/Day</strong>
+                <p>Water, unsweetened tea/coffee. Limit juice to 150ml/day. Avoid sugary drinks and sodas (Eatwell Guide).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Eatwell Traffic Light -->
+      <div class="eatwell-traffic-light mt-4">
+        <h6 class="mb-3">🚦 Eatwell Guide — Choose Foods Lower In:</h6>
+        <div class="traffic-lights-row">
+          <div class="traffic-item traffic-low">
+            <div class="traffic-dot"></div>
+            <strong>Fat</strong>
+            <small>Choose LOW</small>
+          </div>
+          <div class="traffic-item traffic-low">
+            <div class="traffic-dot"></div>
+            <strong>Saturates</strong>
+            <small>Choose LOW</small>
+          </div>
+          <div class="traffic-item traffic-high">
+            <div class="traffic-dot traffic-dot-red"></div>
+            <strong>Sugars</strong>
+            <small>Avoid HIGH</small>
+          </div>
+          <div class="traffic-item traffic-low">
+            <div class="traffic-dot"></div>
+            <strong>Salt</strong>
+            <small>Choose LOW</small>
+          </div>
+        </div>
+        <p class="traffic-ref-text">Reference: 2000 kcal/day (women) · 2500 kcal/day (men) — UK Eatwell Guide</p>
+      </div>
+    </div>
+
+    <!-- Macros + Health Score -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <div class="results-card">
+          <h5 class="card-section-title"><i class="bi bi-pie-chart-fill me-2"></i>Daily Macronutrients</h5>
+          <div class="macros-display">
+            <div class="macro-item macro-protein">
+              <div class="macro-circle"><span class="macro-val">{{ plan.protein|int }}g</span></div>
+              <div class="macro-name">Protein</div>
+              <div class="macro-cal">{{ (plan.protein * 4)|int }} kcal</div>
+            </div>
+            <div class="macro-item macro-carbs">
+              <div class="macro-circle"><span class="macro-val">{{ plan.carbs|int }}g</span></div>
+              <div class="macro-name">Carbs</div>
+              <div class="macro-cal">{{ (plan.carbs * 4)|int }} kcal</div>
+            </div>
+            <div class="macro-item macro-fats">
+              <div class="macro-circle"><span class="macro-val">{{ plan.fats|int }}g</span></div>
+              <div class="macro-name">Fats</div>
+              <div class="macro-cal">{{ (plan.fats * 9)|int }} kcal</div>
+            </div>
+          </div>
+          <canvas id="macroChart" height="200"></canvas>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="results-card">
+          <h5 class="card-section-title"><i class="bi bi-heart-pulse-fill me-2"></i>Health Analysis</h5>
+          <div class="health-score-display text-center mb-3">
+            <div class="health-score-circle score-{{ health_analysis.score_label[1] }}">
+              <span class="health-score-num">{{ health_analysis.health_score }}</span>
+              <span class="health-score-100">/100</span>
+            </div>
+            <div class="health-score-label mt-2 text-{{ health_analysis.score_label[1] }}">
+              {{ health_analysis.score_label[0] }}
+            </div>
+          </div>
+          <div class="health-insights">
+            {% for insight in health_analysis.insights[:3] %}
+            <div class="insight-item insight-positive">
+              <i class="bi bi-check-circle-fill me-2"></i>{{ insight }}
+            </div>
+            {% endfor %}
+            {% for warning in health_analysis.warnings[:3] %}
+            <div class="insight-item insight-warning">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ warning }}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7-Day Meal Plan -->
+    <div class="results-card mb-4">
+      <h5 class="card-section-title"><i class="bi bi-calendar-week-fill me-2"></i>Your 7-Day Meal Plan</h5>
+      <p class="text-muted small mb-3">Designed using Harvard Plate proportions · Indian cuisine · Practical & affordable</p>
+
+      <ul class="nav nav-pills meal-day-tabs mb-3 flex-nowrap overflow-auto" id="dayTabs">
+        {% for day in days %}
+        <li class="nav-item">
+          <button class="nav-link {% if loop.first %}active{% endif %}" data-bs-toggle="pill" data-bs-target="#day-{{ day }}">{{ day[:3] }}</button>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <div class="tab-content" id="dayTabContent">
+        {% for day in days %}
+        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="day-{{ day }}">
+          <div class="row g-3">
+            {% for meal_key, icon, label in [('breakfast','🌅','Breakfast'),('lunch','☀️','Lunch'),('dinner','🌙','Dinner'),('snacks','🍎','Snacks')] %}
+            {% if week_plan[day] and week_plan[day][meal_key] %}
+            {% set meal = week_plan[day][meal_key] %}
+            <div class="col-md-6 col-xl-3">
+              <div class="meal-card">
+                <div class="meal-card-header">
+                  <span class="meal-icon">{{ icon }}</span>
+                  <span class="meal-type">{{ label }}</span>
+                  <span class="meal-calories">{{ meal.get('calories',0) }} kcal</span>
+                </div>
+                <div class="meal-card-body">
+                  <h6 class="meal-name">{{ meal.get('meal','—') }}</h6>
+                  <p class="meal-desc">{{ meal.get('description','') }}</p>
+                  <div class="meal-macros">
+                    <span class="macro-tag protein-tag">P: {{ meal.get('protein',0) }}g</span>
+                    <span class="macro-tag carb-tag">C: {{ meal.get('carbs',0) }}g</span>
+                    <span class="macro-tag fat-tag">F: {{ meal.get('fats',0) }}g</span>
+                  </div>
+                  {% if meal.get('eatwell_segments') %}
+                  <div class="eatwell-tags mt-2">
+                    {% for seg in meal.get('eatwell_segments',[])[:3] %}
+                    <span class="eatwell-tag eatwell-{{ seg.replace('_','-') }}">{{ seg.replace('_',' ').title() }}</span>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Tips + Foods to Limit + Summary -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-5">
+        <div class="results-card h-100">
+          <h5 class="card-section-title"><i class="bi bi-lightbulb-fill me-2"></i>Lifestyle Recommendations</h5>
+          <p class="text-muted small mb-3">Based on Harvard Plate & Eatwell Guide principles</p>
+          <div class="tips-list">
+            {% for tip in lifestyle_tips %}
+            <div class="tip-item">
+              <div class="tip-number">{{ loop.index }}</div>
+              <p>{{ tip }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="row g-4 h-100">
+          <!-- Foods to Limit -->
+          {% if week_plan %}
+          {% set plan_data = namespace(foods_to_limit=[]) %}
+          <div class="col-12">
+            <div class="results-card limit-card">
+              <h5 class="card-section-title"><i class="bi bi-slash-circle-fill me-2 text-danger"></i>Foods to Eat Less Often <span class="badge bg-danger ms-2 fw-normal" style="font-size:0.7rem">Eatwell Guide</span></h5>
+              <div class="limit-pills">
+                <div class="limit-pill">🍟 White rice & maida — switch to wholegrain</div>
+                <div class="limit-pill">🍕 Fried snacks (samosa, pakora) — occasional only</div>
+                <div class="limit-pill">🥤 Sugary drinks & packaged juice — max 150ml/day</div>
+                <div class="limit-pill">🧈 Butter, vanaspati (trans fats) — use olive oil instead</div>
+                <div class="limit-pill">🍪 Biscuits, sweets, cakes — small amounts only</div>
+                <div class="limit-pill">🥩 Processed & red meat — choose fish, dal, eggs</div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          <!-- User Summary -->
+          <div class="col-12">
+            <div class="results-card">
+              <h5 class="card-section-title"><i class="bi bi-person-check-fill me-2"></i>Your Profile Summary</h5>
+              <div class="user-summary-grid">
+                <div class="summary-row"><span class="summary-label">Goal</span><span class="summary-value">{{ user.goal.replace('_',' ').title() }}</span></div>
+                <div class="summary-row"><span class="summary-label">Diet Type</span><span class="summary-value">{{ user.diet_type.replace('_',' ').title() }}</span></div>
+                <div class="summary-row"><span class="summary-label">Activity</span><span class="summary-value">{{ user.activity_level.replace('_',' ').title() }}</span></div>
+                <div class="summary-row"><span class="summary-label">Age / Gender</span><span class="summary-value">{{ user.age }} / {{ user.gender.title() }}</span></div>
+                <div class="summary-row"><span class="summary-label">Height / Weight</span><span class="summary-value">{{ user.height }}cm / {{ user.weight }}kg</span></div>
+                <div class="summary-row"><span class="summary-label">Sleep</span><span class="summary-value">{{ user.sleep_hours }}h ({{ (user.sleep_quality or '—').title() }})</span></div>
+                <div class="summary-row"><span class="summary-label">Water Intake</span><span class="summary-value">{{ user.water_intake or '—' }}</span></div>
+              </div>
+              <div class="mt-3">
+                <a href="{{ url_for('dashboard', user_id=user.id) }}" class="btn btn-primary-custom w-100">
+                  <i class="bi bi-graph-up me-2"></i>Track My Progress
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Source Attribution -->
+    <div class="source-attribution">
+      <i class="bi bi-info-circle me-2"></i>
+      Nutrition guidelines based on:
+      <strong>Harvard Healthy Eating Plate</strong> (Harvard T.H. Chan School of Public Health) &
+      <strong>UK Eatwell Guide</strong> (Public Health England, 2016). Always consult a healthcare professional before major dietary changes.
+    </div>
+
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Macro Doughnut Chart
-const ctx = document.getElementById('macroChart');
-if (ctx) {
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Protein', 'Carbohydrates', 'Fats'],
-            datasets: [{
-                data: [{{ plan.protein }}, {{ plan.carbs }}, {{ plan.fats }}],
-                backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
-                borderColor: ['#16a34a', '#d97706', '#dc2626'],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            cutout: '65%',
-            plugins: {
-                legend: { position: 'bottom' },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => `${ctx.label}: ${ctx.raw}g`
-                    }
-                }
-            }
-        }
-    });
+// Harvard Plate Pie Chart
+const plateCtx = document.getElementById('platePieChart');
+if (plateCtx) {
+  new Chart(plateCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Vegetables', 'Whole Grains', 'Healthy Protein', 'Fruits'],
+      datasets: [{
+        data: [37, 25, 25, 13],
+        backgroundColor: ['#4ade80','#f59e0b','#f87171','#fb923c'],
+        borderColor: ['#16a34a','#d97706','#dc2626','#ea580c'],
+        borderWidth: 3
+      }]
+    },
+    options: {
+      responsive: false,
+      cutout: '45%',
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.raw}%` } } }
+    }
+  });
+}
+
+// Macro Chart
+const macroCtx = document.getElementById('macroChart');
+if (macroCtx) {
+  new Chart(macroCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Protein','Carbohydrates','Fats'],
+      datasets: [{
+        data: [{{ plan.protein }}, {{ plan.carbs }}, {{ plan.fats }}],
+        backgroundColor: ['#22c55e','#f59e0b','#ef4444'],
+        borderColor: ['#16a34a','#d97706','#dc2626'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.raw}g` } }
+      }
+    }
+  });
 }
 </script>
 {% endblock %}
