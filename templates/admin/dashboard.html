@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — NutriAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --green-500: #22c55e; --green-600: #16a34a; --green-50: #f0fdf4;
+      --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+      --slate-500: #64748b; --slate-700: #334155; --slate-800: #1e293b; --slate-900: #0f172a;
+      --sidebar-w: 260px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--slate-50); color: var(--slate-800); }
+
+    /* Sidebar */
+    .admin-sidebar {
+      position: fixed; left: 0; top: 0; bottom: 0;
+      width: var(--sidebar-w);
+      background: var(--slate-900);
+      display: flex; flex-direction: column;
+      z-index: 100; overflow-y: auto;
+    }
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-logo .logo-icon { font-size: 1.5rem; }
+    .sidebar-logo .logo-text { font-family: 'Playfair Display', serif; color: #fff; font-size: 1.2rem; }
+    .sidebar-logo .logo-badge {
+      font-size: 0.62rem; background: var(--green-600); color: #fff;
+      padding: 2px 7px; border-radius: 100px; margin-left: 4px; font-weight: 700;
+    }
+    .sidebar-nav { padding: 16px 12px; flex: 1; }
+    .nav-label {
+      font-size: 0.65rem; font-weight: 700; color: #475569;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 10px 10px 6px;
+    }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px;
+      color: #94a3b8; font-size: 0.875rem; font-weight: 500;
+      text-decoration: none; transition: all 0.15s;
+      margin-bottom: 2px;
+    }
+    .sidebar-link:hover, .sidebar-link.active {
+      background: rgba(255,255,255,0.07); color: #fff;
+    }
+    .sidebar-link.active { background: var(--green-600); color: #fff; }
+    .sidebar-link i { font-size: 1rem; width: 20px; }
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .admin-avatar {
+      width: 36px; height: 36px; background: var(--green-600);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 0.85rem;
+    }
+    .admin-info .admin-name { color: #fff; font-size: 0.85rem; font-weight: 600; }
+    .admin-info .admin-role { color: #64748b; font-size: 0.72rem; }
+    .sidebar-footer a { color: #64748b; margin-left: auto; font-size: 1.1rem; }
+    .sidebar-footer a:hover { color: #ef4444; }
+
+    /* Main */
+    .admin-main {
+      margin-left: var(--sidebar-w);
+      padding: 0;
+      min-height: 100vh;
+    }
+    .admin-topbar {
+      background: #fff; border-bottom: 1px solid var(--slate-200);
+      padding: 16px 32px;
+      display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--slate-900); }
+    .topbar-title small { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--slate-500); font-weight: 400; display: block; margin-top: 1px; }
+    .topbar-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-admin-primary {
+      background: var(--green-600); color: #fff; border: none;
+      border-radius: 100px; padding: 8px 18px; font-size: 0.85rem;
+      font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn-admin-primary:hover { background: #15803d; color: #fff; transform: translateY(-1px); }
+    .btn-admin-outline {
+      background: transparent; color: var(--slate-700);
+      border: 1.5px solid var(--slate-200); border-radius: 100px;
+      padding: 7px 16px; font-size: 0.85rem; font-weight: 500;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn-admin-outline:hover { border-color: var(--slate-400); color: var(--slate-900); }
+
+    .admin-content { padding: 28px 32px; }
+
+    /* Stats cards */
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: #fff; border-radius: 16px; padding: 22px 20px;
+      border: 1.5px solid var(--slate-200); transition: all 0.15s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.07); }
+    .stat-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .stat-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .stat-icon-green  { background: var(--green-50); }
+    .stat-icon-blue   { background: #eff6ff; }
+    .stat-icon-amber  { background: #fffbeb; }
+    .stat-icon-purple { background: #faf5ff; }
+    .stat-badge { font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 100px; }
+    .badge-up   { background: #dcfce7; color: #166534; }
+    .badge-new  { background: #eff6ff; color: #1d4ed8; }
+    .stat-value { font-size: 2rem; font-weight: 800; font-family: 'Playfair Display', serif; color: var(--slate-900); line-height: 1; }
+    .stat-label { font-size: 0.8rem; color: var(--slate-500); margin-top: 4px; }
+
+    /* Charts row */
+    .charts-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .chart-card {
+      background: #fff; border-radius: 16px; padding: 22px 22px 18px;
+      border: 1.5px solid var(--slate-200);
+    }
+    .chart-card-title { font-size: 0.9rem; font-weight: 700; color: var(--slate-800); margin-bottom: 4px; }
+    .chart-card-sub   { font-size: 0.75rem; color: var(--slate-500); margin-bottom: 16px; }
+
+    /* Users Table */
+    .table-card {
+      background: #fff; border-radius: 16px;
+      border: 1.5px solid var(--slate-200); overflow: hidden; margin-bottom: 24px;
+    }
+    .table-card-header {
+      padding: 18px 24px; border-bottom: 1px solid var(--slate-100);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .table-card-header h5 { font-size: 0.95rem; font-weight: 700; margin: 0; }
+    .table-search {
+      border: 1.5px solid var(--slate-200); border-radius: 100px;
+      padding: 7px 14px 7px 36px; font-size: 0.85rem; width: 220px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.44 1.9a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E") no-repeat 12px center;
+    }
+    .table-search:focus { outline: none; border-color: var(--green-600); box-shadow: 0 0 0 3px rgba(22,163,74,0.1); }
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th {
+      background: var(--slate-50); font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px; color: var(--slate-500);
+      padding: 11px 16px; text-align: left; border-bottom: 1px solid var(--slate-200);
+      white-space: nowrap;
+    }
+    .admin-table td {
+      padding: 13px 16px; font-size: 0.85rem; color: var(--slate-700);
+      border-bottom: 1px solid var(--slate-100); vertical-align: middle;
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: var(--slate-50); }
+    .user-avatar-sm {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700; color: #fff; margin-right: 8px;
+    }
+    .user-name-cell { display: flex; align-items: center; }
+    .user-name-text .name { font-weight: 600; color: var(--slate-900); font-size: 0.88rem; }
+    .user-name-text .email { font-size: 0.73rem; color: var(--slate-400); }
+    .badge-goal {
+      font-size: 0.7rem; padding: 3px 9px; border-radius: 100px; font-weight: 600;
+    }
+    .goal-weight_loss { background: #fee2e2; color: #991b1b; }
+    .goal-muscle_gain { background: #dcfce7; color: #166534; }
+    .goal-maintain    { background: #eff6ff; color: #1e40af; }
+    .badge-bmi {
+      font-size: 0.7rem; padding: 3px 9px; border-radius: 100px; font-weight: 600;
+    }
+    .bmi-Normal    { background: #dcfce7; color: #166534; }
+    .bmi-Overweight{ background: #fef3c7; color: #92400e; }
+    .bmi-Obese     { background: #fee2e2; color: #991b1b; }
+    .bmi-Underweight{ background: #eff6ff; color: #1e40af; }
+    .action-btns { display: flex; gap: 6px; }
+    .btn-view {
+      background: var(--green-50); color: var(--green-600);
+      border: 1px solid #86efac; border-radius: 8px;
+      padding: 5px 10px; font-size: 0.78rem; font-weight: 600;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+      transition: all 0.15s;
+    }
+    .btn-view:hover { background: var(--green-600); color: #fff; }
+    .btn-del {
+      background: #fef2f2; color: #dc2626;
+      border: 1px solid #fca5a5; border-radius: 8px;
+      padding: 5px 10px; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+      transition: all 0.15s;
+    }
+    .btn-del:hover { background: #dc2626; color: #fff; }
+    .empty-table { text-align: center; padding: 60px; color: var(--slate-400); }
+    .empty-table .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+    .pagination-row { padding: 14px 20px; border-top: 1px solid var(--slate-100); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--slate-500); }
+
+    /* Mini breakdown tables */
+    .breakdown-table { width: 100%; font-size: 0.8rem; }
+    .breakdown-table td { padding: 5px 0; }
+    .breakdown-bar { height: 6px; border-radius: 3px; background: var(--green-500); }
+
+    /* Flash */
+    .flash-container { padding: 0 32px; margin-top: 20px; }
+
+    @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .charts-row { grid-template-columns: 1fr; } }
+    @media (max-width: 768px)  { .admin-sidebar { display: none; } .admin-main { margin-left: 0; } .stats-grid { grid-template-columns: 1fr 1fr; } .admin-content { padding: 16px; } }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="admin-sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon">🥗</span>
+    <span class="logo-text">NutriAI <span class="logo-badge">ADMIN</span></span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main</div>
+    <a href="{{ url_for('admin_dashboard') }}" class="sidebar-link active">
+      <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+    <a href="{{ url_for('index') }}" class="sidebar-link" target="_blank">
+      <i class="bi bi-box-arrow-up-right"></i> View Live Site
+    </a>
+    <div class="nav-label mt-3">Data</div>
+    <a href="#usersTable" class="sidebar-link">
+      <i class="bi bi-people-fill"></i> All Users
+    </a>
+    <a href="#chartsSection" class="sidebar-link">
+      <i class="bi bi-bar-chart-fill"></i> Analytics
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="admin-avatar">{{ session.admin_username[0].upper() if session.admin_username else 'A' }}</div>
+    <div class="admin-info">
+      <div class="admin-name">{{ session.admin_username or 'Admin' }}</div>
+      <div class="admin-role">Administrator</div>
+    </div>
+    <a href="{{ url_for('admin_logout') }}" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="admin-main">
+  <div class="admin-topbar">
+    <div class="topbar-title">
+      Dashboard
+      <small>Overview of all users and diet plans</small>
+    </div>
+    <div class="topbar-actions">
+      <a href="{{ url_for('questionnaire') }}" target="_blank" class="btn-admin-outline">
+        <i class="bi bi-plus-circle"></i> New Entry
+      </a>
+      <a href="{{ url_for('admin_logout') }}" class="btn-admin-outline">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
+    </div>
+  </div>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert" style="border-radius:12px;font-size:0.875rem;">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <div class="admin-content">
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-icon stat-icon-green">👥</div>
+          <span class="stat-badge badge-new">+{{ stats.new_this_week }} this week</span>
+        </div>
+        <div class="stat-value">{{ stats.total_users }}</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-icon stat-icon-blue">🍽️</div>
+          <span class="stat-badge badge-up">Active</span>
+        </div>
+        <div class="stat-value">{{ stats.total_plans }}</div>
+        <div class="stat-label">Diet Plans Generated</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-icon stat-icon-amber">🎯</div>
+        </div>
+        <div class="stat-value">{{ stats.avg_calories }}</div>
+        <div class="stat-label">Avg. Daily Calories (kcal)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-icon stat-icon-purple">⚖️</div>
+        </div>
+        <div class="stat-value">{{ stats.avg_bmi }}</div>
+        <div class="stat-label">Average BMI</div>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-row" id="chartsSection">
+      <!-- Signup trend -->
+      <div class="chart-card">
+        <div class="chart-card-title">📈 User Signups — Last 30 Days</div>
+        <div class="chart-card-sub">Daily registration trend</div>
+        <canvas id="signupChart" height="180"></canvas>
+      </div>
+      <!-- Goals breakdown -->
+      <div class="chart-card">
+        <div class="chart-card-title">🎯 Goals Distribution</div>
+        <div class="chart-card-sub">What users want to achieve</div>
+        <canvas id="goalChart" height="180"></canvas>
+        <table class="breakdown-table mt-2">
+          {% for goal, cnt in stats.goals.items() %}
+          <tr>
+            <td style="width:100px;color:#475569;">{{ goal.replace('_',' ').title() }}</td>
+            <td><div class="breakdown-bar" style="width:{{ (cnt / stats.total_users * 100)|int if stats.total_users else 0 }}%;max-width:80px;display:inline-block;"></div></td>
+            <td style="text-align:right;font-weight:600;">{{ cnt }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+      <!-- BMI breakdown -->
+      <div class="chart-card">
+        <div class="chart-card-title">⚖️ BMI Distribution</div>
+        <div class="chart-card-sub">Health categories across users</div>
+        <canvas id="bmiChart" height="180"></canvas>
+      </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="table-card" id="usersTable">
+      <div class="table-card-header">
+        <h5><i class="bi bi-people-fill me-2" style="color:var(--green-600)"></i>All Users & Diet Plans</h5>
+        <input type="text" class="table-search" id="userSearch" placeholder="Search name, email, goal…" oninput="filterTable()">
+      </div>
+
+      {% if users %}
+      <div style="overflow-x:auto;">
+        <table class="admin-table" id="mainTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>User</th>
+              <th>Age / Gender</th>
+              <th>Height / Weight</th>
+              <th>BMI</th>
+              <th>Goal</th>
+              <th>Diet</th>
+              <th>Daily kcal</th>
+              <th>Protein / Carbs / Fat</th>
+              <th>Activity</th>
+              <th>Sleep</th>
+              <th>Stress</th>
+              <th>Water</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            {% for u in users %}
+            {% set colors = ['#22c55e','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899'] %}
+            {% set color = colors[loop.index0 % 7] %}
+            <tr>
+              <td style="color:#94a3b8;font-size:0.78rem;">{{ u.id }}</td>
+              <td>
+                <div class="user-name-cell">
+                  <div class="user-avatar-sm" style="background:{{ color }};">
+                    {{ u.name[0].upper() if u.name else '?' }}
+                  </div>
+                  <div class="user-name-text">
+                    <div class="name">{{ u.name or '—' }}</div>
+                    <div class="email">{{ u.email or 'No email' }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ u.age }}y / {{ u.gender.title() if u.gender else '—' }}</td>
+              <td>{{ u.height }}cm / {{ u.weight }}kg</td>
+              <td>
+                {% if u.bmi %}
+                <span class="badge-bmi bmi-{{ u.bmi_category }}">{{ u.bmi }} ({{ u.bmi_category }})</span>
+                {% else %}—{% endif %}
+              </td>
+              <td>
+                <span class="badge-goal goal-{{ u.goal }}">{{ (u.goal or '—').replace('_',' ').title() }}</span>
+              </td>
+              <td style="font-size:0.8rem;">{{ (u.diet_type or '—').replace('_',' ').title() }}</td>
+              <td>
+                {% if u.daily_calories %}<strong>{{ u.daily_calories|int }}</strong> kcal{% else %}—{% endif %}
+              </td>
+              <td style="font-size:0.78rem;white-space:nowrap;">
+                {% if u.protein %}
+                <span style="color:#166534;">P:{{ u.protein|int }}g</span> /
+                <span style="color:#92400e;">C:{{ u.carbs|int }}g</span> /
+                <span style="color:#991b1b;">F:{{ u.fats|int }}g</span>
+                {% else %}—{% endif %}
+              </td>
+              <td style="font-size:0.8rem;">{{ (u.activity_level or '—').replace('_',' ').title() }}</td>
+              <td style="font-size:0.8rem;">{{ u.sleep_hours }}h <span style="color:#94a3b8;">({{ (u.sleep_quality or '').title() }})</span></td>
+              <td>
+                {% set sc = {'low':'#166534','moderate':'#92400e','high':'#991b1b'} %}
+                <span style="font-size:0.78rem;font-weight:600;color:{{ sc.get(u.stress_level,'#475569') }}">
+                  {{ (u.stress_level or '—').title() }}
+                </span>
+              </td>
+              <td style="font-size:0.78rem;">{{ u.water_intake or '—' }}</td>
+              <td style="font-size:0.75rem;color:#94a3b8;white-space:nowrap;">
+                {{ u.created_at[:10] if u.created_at else '—' }}
+              </td>
+              <td>
+                <div class="action-btns">
+                  <a href="{{ url_for('admin_user_detail', user_id=u.id) }}" class="btn-view">
+                    <i class="bi bi-eye"></i> View
+                  </a>
+                  <form method="POST" action="{{ url_for('admin_delete_user', user_id=u.id) }}"
+                        onsubmit="return confirm('Delete {{ u.name }} and ALL their data? This cannot be undone.')">
+                    <button type="submit" class="btn-del">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-row">
+        <span>Showing <strong id="rowCount">{{ users|length }}</strong> of <strong>{{ users|length }}</strong> users</span>
+        <span>Total plans generated: <strong>{{ stats.total_plans }}</strong></span>
+      </div>
+      {% else %}
+      <div class="empty-table">
+        <div class="empty-icon">👤</div>
+        <p>No users have submitted a health questionnaire yet.</p>
+        <a href="{{ url_for('questionnaire') }}" target="_blank" class="btn-admin-primary mt-2" style="display:inline-flex;margin:0 auto;">
+          <i class="bi bi-plus"></i> Add First Entry
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Diet Type Breakdown -->
+    <div class="chart-card" style="margin-bottom:24px;">
+      <div class="chart-card-title">🥗 Diet Type Breakdown</div>
+      <div class="chart-card-sub">User dietary preferences</div>
+      <div style="display:flex;gap:32px;align-items:center;flex-wrap:wrap;">
+        <canvas id="dietChart" width="200" height="200" style="max-width:200px;"></canvas>
+        <div>
+          {% for diet, cnt in stats.diets.items() %}
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:0.85rem;">
+            <div style="width:12px;height:12px;border-radius:50%;background:{% if 'veg' in diet %}#22c55e{% elif 'non' in diet %}#f59e0b{% else %}#3b82f6{% endif %}"></div>
+            <span style="min-width:140px;">{{ diet.replace('_',' ').title() }}</span>
+            <strong>{{ cnt }}</strong>
+            <span style="color:#94a3b8;">user{{ 's' if cnt != 1 else '' }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /admin-content -->
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Signup trend chart
+new Chart(document.getElementById('signupChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ signup_labels|safe }},
+    datasets: [{
+      label: 'Signups',
+      data: {{ signup_counts|safe }},
+      backgroundColor: 'rgba(34,197,94,0.15)',
+      borderColor: '#22c55e',
+      borderWidth: 2, borderRadius: 6
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.04)' } }, x: { grid: { display: false } } } }
+});
+
+// Goals chart
+const goals = {{ stats.goals|tojson }};
+new Chart(document.getElementById('goalChart'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(goals).map(k => k.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())),
+    datasets: [{ data: Object.values(goals), backgroundColor: ['#ef4444','#22c55e','#3b82f6'], borderWidth: 0 }]
+  },
+  options: { responsive: true, cutout: '60%', plugins: { legend: { display: false } } }
+});
+
+// BMI chart
+const bmis = {{ stats.bmis|tojson }};
+const bmiColors = { 'Normal': '#22c55e', 'Overweight': '#f59e0b', 'Obese': '#ef4444', 'Underweight': '#3b82f6' };
+new Chart(document.getElementById('bmiChart'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(bmis),
+    datasets: [{ data: Object.values(bmis), backgroundColor: Object.keys(bmis).map(k => bmiColors[k] || '#94a3b8'), borderWidth: 0 }]
+  },
+  options: { responsive: true, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+});
+
+// Diet chart
+const diets = {{ stats.diets|tojson }};
+new Chart(document.getElementById('dietChart'), {
+  type: 'pie',
+  data: {
+    labels: Object.keys(diets).map(k => k.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())),
+    datasets: [{ data: Object.values(diets), backgroundColor: ['#22c55e','#f59e0b','#3b82f6'], borderWidth: 2, borderColor: '#fff' }]
+  },
+  options: { responsive: false, plugins: { legend: { display: false } } }
+});
+
+// Table search
+function filterTable() {
+  const q = document.getElementById('userSearch').value.toLowerCase();
+  const rows = document.querySelectorAll('#tableBody tr');
+  let visible = 0;
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    const show = text.includes(q);
+    row.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  document.getElementById('rowCount').textContent = visible;
+}
+</script>
+</body>
+</html>

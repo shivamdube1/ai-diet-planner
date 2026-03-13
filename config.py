@@ -8,6 +8,10 @@ class Config:
     DATABASE_PATH = os.environ.get('DATABASE_PATH', 'database/health_diet_app.db')
     OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
     GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
-    AI_PROVIDER = os.environ.get('AI_PROVIDER', 'gemini')  # 'openai' or 'gemini'
+    AI_PROVIDER = os.environ.get('AI_PROVIDER', 'gemini')
     DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max upload
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024
+
+    # Admin credentials — change these in .env before deploying
+    ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'nutriai@admin2025')
