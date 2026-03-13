@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Create Account — NutriAI{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-split">
+
+    <!-- Left Panel -->
+    <div class="auth-left">
+      <div class="auth-left-content">
+        <div class="auth-logo-mark">🥗</div>
+        <h2 class="auth-left-title">Start Your Health Journey</h2>
+        <p class="auth-left-sub">Join NutriAI and get a personalized AI diet plan based on your unique body, lifestyle, and goals.</p>
+        <div class="auth-perks">
+          <div class="auth-perk"><span class="perk-icon">✅</span>Personalized 7-day meal plans</div>
+          <div class="auth-perk"><span class="perk-icon">✅</span>BMI, BMR & TDEE calculations</div>
+          <div class="auth-perk"><span class="perk-icon">✅</span>Harvard & Eatwell-aligned nutrition</div>
+          <div class="auth-perk"><span class="perk-icon">✅</span>Progress tracking dashboard</div>
+          <div class="auth-perk"><span class="perk-icon">✅</span>100% free — no credit card needed</div>
+        </div>
+        <div class="auth-quote">
+          <div class="quote-text">"Let food be thy medicine and medicine be thy food."</div>
+          <div class="quote-author">— Hippocrates</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Form -->
+    <div class="auth-right">
+      <div class="auth-form-wrap">
+        <div class="auth-form-header">
+          <h3>Create Your Free Account</h3>
+          <p>Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+        </div>
+
+        {% if error %}
+        <div class="auth-error">
+          <i class="bi bi-exclamation-circle-fill me-2"></i>{{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('register') }}" id="registerForm" novalidate>
+          <div class="auth-field">
+            <label>Full Name</label>
+            <div class="auth-input-wrap">
+              <i class="bi bi-person-fill auth-input-icon"></i>
+              <input type="text" name="name" class="auth-input" placeholder="Your full name" required autocomplete="name">
+            </div>
+          </div>
+          <div class="auth-field">
+            <label>Email Address</label>
+            <div class="auth-input-wrap">
+              <i class="bi bi-envelope-fill auth-input-icon"></i>
+              <input type="email" name="email" class="auth-input" placeholder="you@example.com" required autocomplete="email">
+            </div>
+          </div>
+          <div class="auth-field">
+            <label>Password</label>
+            <div class="auth-input-wrap">
+              <i class="bi bi-lock-fill auth-input-icon"></i>
+              <input type="password" name="password" class="auth-input" id="pw1"
+                     placeholder="Minimum 6 characters" required autocomplete="new-password">
+              <button type="button" class="auth-eye" onclick="togglePw('pw1','eye1')">
+                <i class="bi bi-eye" id="eye1"></i>
+              </button>
+            </div>
+            <div class="pw-strength-bar mt-1"><div id="pwStrengthFill"></div></div>
+            <div class="pw-strength-label" id="pwStrengthLabel"></div>
+          </div>
+          <div class="auth-field">
+            <label>Confirm Password</label>
+            <div class="auth-input-wrap">
+              <i class="bi bi-lock-fill auth-input-icon"></i>
+              <input type="password" name="confirm_password" class="auth-input" id="pw2"
+                     placeholder="Re-enter password" required autocomplete="new-password">
+              <button type="button" class="auth-eye" onclick="togglePw('pw2','eye2')">
+                <i class="bi bi-eye" id="eye2"></i>
+              </button>
+            </div>
+            <div class="match-msg" id="matchMsg"></div>
+          </div>
+
+          <div class="auth-terms">
+            <label class="auth-check-label">
+              <input type="checkbox" id="agreeTerms" required>
+              <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+            </label>
+          </div>
+
+          <button type="submit" class="auth-btn" id="submitBtn">
+            <i class="bi bi-person-plus-fill me-2"></i>Create Account & Start Analysis
+          </button>
+
+          <div class="auth-divider"><span>or</span></div>
+          <a href="{{ url_for('questionnaire') }}" class="auth-btn-ghost">
+            Continue without an account
+          </a>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePw(id, eyeId) {
+  const f = document.getElementById(id);
+  const e = document.getElementById(eyeId);
+  f.type = f.type === 'password' ? 'text' : 'password';
+  e.className = f.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+}
+
+// Password strength
+document.getElementById('pw1').addEventListener('input', function() {
+  const v = this.value, fill = document.getElementById('pwStrengthFill');
+  const lbl = document.getElementById('pwStrengthLabel');
+  let score = 0;
+  if (v.length >= 6) score++;
+  if (v.length >= 10) score++;
+  if (/[A-Z]/.test(v)) score++;
+  if (/[0-9]/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  const levels = [
+    {w:'0%',c:'transparent',t:''},
+    {w:'25%',c:'#ef4444',t:'Weak'},
+    {w:'50%',c:'#f59e0b',t:'Fair'},
+    {w:'75%',c:'#3b82f6',t:'Good'},
+    {w:'100%',c:'#22c55e',t:'Strong'},
+  ];
+  const l = levels[Math.min(score, 4)];
+  fill.style.width = l.w; fill.style.background = l.c;
+  lbl.textContent = l.t; lbl.style.color = l.c;
+  checkMatch();
+});
+
+function checkMatch() {
+  const p1 = document.getElementById('pw1').value;
+  const p2 = document.getElementById('pw2').value;
+  const m  = document.getElementById('matchMsg');
+  if (!p2) { m.textContent = ''; return; }
+  if (p1 === p2) { m.textContent = '✓ Passwords match'; m.style.color = '#22c55e'; }
+  else           { m.textContent = '✗ Passwords do not match'; m.style.color = '#ef4444'; }
+}
+document.getElementById('pw2').addEventListener('input', checkMatch);
+
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating account…';
+});
+</script>
+{% endblock %}

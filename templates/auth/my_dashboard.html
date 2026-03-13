@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard — NutriAI{% endblock %}
+
+{% block content %}
+<div class="mydb-page">
+
+  <!-- Hero Header -->
+  <div class="mydb-hero">
+    <div class="container">
+      <div class="mydb-hero-inner">
+        <div class="mydb-avatar">{{ account.name[0].upper() if account and account.name else 'U' }}</div>
+        <div class="mydb-hero-text">
+          <h1 class="mydb-greeting">Welcome back, {{ account.name.split()[0] if account and account.name else 'there' }}! 👋</h1>
+          <p class="mydb-sub">{{ account.email or '' }} &nbsp;·&nbsp; Member since {{ account.created_at[:10] if account and account.created_at else '' }}</p>
+        </div>
+        <div class="mydb-hero-actions">
+          <a href="{{ url_for('questionnaire') }}" class="btn-mydb-primary">
+            <i class="bi bi-plus-circle-fill me-2"></i>New Health Analysis
+          </a>
+          <a href="{{ url_for('account_settings') }}" class="btn-mydb-outline">
+            <i class="bi bi-gear me-1"></i> Settings
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mydb-content">
+
+    <!-- Summary Stats -->
+    <div class="mydb-stats-row">
+      <div class="mydb-stat-card">
+        <div class="mydb-stat-icon" style="background:#f0fdf4;">📋</div>
+        <div class="mydb-stat-val">{{ profiles|length }}</div>
+        <div class="mydb-stat-label">Health Profiles</div>
+      </div>
+      <div class="mydb-stat-card">
+        <div class="mydb-stat-icon" style="background:#eff6ff;">🍽️</div>
+        <div class="mydb-stat-val">{{ profiles|selectattr('plan')|list|length }}</div>
+        <div class="mydb-stat-label">Diet Plans Generated</div>
+      </div>
+      <div class="mydb-stat-card">
+        <div class="mydb-stat-icon" style="background:#fefce8;">📊</div>
+        <div class="mydb-stat-val">{{ profiles|sum(attribute='progress_count') }}</div>
+        <div class="mydb-stat-label">Progress Entries</div>
+      </div>
+      <div class="mydb-stat-card">
+        <div class="mydb-stat-icon" style="background:#fdf4ff;">🏆</div>
+        <div class="mydb-stat-val">
+          {% if profiles %}
+            {% set best = profiles|selectattr('plan')|list %}
+            {% if best %}{{ best[0].plan.bmi_category or '—' }}{% else %}—{% endif %}
+          {% else %}—{% endif %}
+        </div>
+        <div class="mydb-stat-label">Latest BMI Category</div>
+      </div>
+    </div>
+
+    <!-- Profiles / Plans -->
+    <div class="mydb-section-title">
+      <h2>Your Health Profiles & Diet Plans</h2>
+      <a href="{{ url_for('questionnaire') }}" class="mydb-add-btn">
+        <i class="bi bi-plus-lg"></i> Add New
+      </a>
+    </div>
+
+    {% if profiles %}
+      <div class="mydb-plans-grid">
+        {% for item in profiles %}
+        {% set p  = item.profile %}
+        {% set pl = item.plan %}
+        {% set colors = ['#22c55e','#3b82f6','#f59e0b','#8b5cf6','#ec4899','#06b6d4'] %}
+        {% set color = colors[loop.index0 % 6] %}
+        <div class="mydb-plan-card">
+          <!-- Card Header -->
+          <div class="mydb-plan-card-header" style="border-top: 4px solid {{ color }};">
+            <div class="mydb-plan-avatar" style="background:{{ color }};">
+              {{ p.name[0].upper() if p.name else '?' }}
+            </div>
+            <div class="mydb-plan-info">
+              <div class="mydb-plan-name">{{ p.name }}</div>
+              <div class="mydb-plan-meta">{{ p.age }}y · {{ (p.gender or '').title() }} · {{ p.country or '' }}</div>
+            </div>
+            <span class="mydb-goal-badge goal-{{ p.goal }}">{{ (p.goal or '').replace('_',' ').title() }}</span>
+          </div>
+
+          <!-- Metrics -->
+          {% if pl %}
+          <div class="mydb-plan-metrics">
+            <div class="mpmetric">
+              <div class="mpmetric-val {% if pl.bmi_category == 'Normal' %}val-green{% elif pl.bmi_category == 'Overweight' %}val-amber{% else %}val-red{% endif %}">{{ pl.bmi }}</div>
+              <div class="mpmetric-label">BMI</div>
+              <div class="mpmetric-cat">{{ pl.bmi_category }}</div>
+            </div>
+            <div class="mpmetric">
+              <div class="mpmetric-val">{{ pl.daily_calories|int }}</div>
+              <div class="mpmetric-label">kcal/day</div>
+            </div>
+            <div class="mpmetric">
+              <div class="mpmetric-val">{{ pl.protein|int }}g</div>
+              <div class="mpmetric-label">Protein</div>
+            </div>
+            <div class="mpmetric">
+              <div class="mpmetric-val">{{ item.progress_count }}</div>
+              <div class="mpmetric-label">Check-ins</div>
+            </div>
+          </div>
+
+          <!-- Macro bar -->
+          {% set total_macro = pl.protein + pl.carbs + pl.fats %}
+          {% if total_macro > 0 %}
+          <div class="mydb-macro-bar">
+            <div title="Protein {{ pl.protein|int }}g"
+                 style="width:{{ (pl.protein/total_macro*100)|int }}%;background:#22c55e;"></div>
+            <div title="Carbs {{ pl.carbs|int }}g"
+                 style="width:{{ (pl.carbs/total_macro*100)|int }}%;background:#f59e0b;"></div>
+            <div title="Fats {{ pl.fats|int }}g"
+                 style="width:{{ (pl.fats/total_macro*100)|int }}%;background:#ef4444;"></div>
+          </div>
+          <div class="mydb-macro-labels">
+            <span style="color:#22c55e;">P {{ pl.protein|int }}g</span>
+            <span style="color:#f59e0b;">C {{ pl.carbs|int }}g</span>
+            <span style="color:#ef4444;">F {{ pl.fats|int }}g</span>
+          </div>
+          {% endif %}
+
+          <!-- Weight progress mini -->
+          {% if item.latest_weight %}
+          <div class="mydb-weight-row">
+            <i class="bi bi-graph-up" style="color:#22c55e;"></i>
+            Latest weight: <strong>{{ item.latest_weight }} kg</strong>
+            {% if p.target_weight %}
+              · Target: <strong>{{ p.target_weight }} kg</strong>
+              {% set diff = item.latest_weight - p.target_weight %}
+              <span style="color:{% if diff <= 0 %}#22c55e{% else %}#f59e0b{% endif %};font-weight:700;font-size:0.78rem;margin-left:4px;">
+                {% if diff <= 0 %}✓ Reached!{% else %}{{ "%.1f"|format(diff) }}kg to go{% endif %}
+              </span>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <div class="mydb-plan-card-footer">
+            <span class="mydb-date">📅 {{ pl.created_at[:10] if pl.created_at else 'N/A' }}</span>
+            <div class="mydb-card-actions">
+              <a href="{{ url_for('results', user_id=p.id, plan_id=pl.id) }}" class="btn-card-view">
+                <i class="bi bi-eye"></i> Results
+              </a>
+              <a href="{{ url_for('dashboard', user_id=p.id) }}" class="btn-card-track">
+                <i class="bi bi-graph-up"></i> Track
+              </a>
+            </div>
+          </div>
+
+          {% else %}
+          <!-- No plan yet -->
+          <div class="mydb-no-plan">
+            <p>No diet plan generated yet.</p>
+            <a href="{{ url_for('questionnaire') }}" class="btn-card-view">Generate Plan</a>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="mydb-empty">
+      <div class="mydb-empty-icon">🥗</div>
+      <h3>No health profiles yet</h3>
+      <p>Complete your first health questionnaire to get your personalized AI-generated diet plan.</p>
+      <a href="{{ url_for('questionnaire') }}" class="btn-mydb-primary mt-3" style="display:inline-flex;">
+        <i class="bi bi-plus-circle-fill me-2"></i>Start Health Analysis
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

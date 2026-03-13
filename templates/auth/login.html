@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Log In — NutriAI{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-split">
+
+    <!-- Left Panel -->
+    <div class="auth-left">
+      <div class="auth-left-content">
+        <div class="auth-logo-mark">🥗</div>
+        <h2 class="auth-left-title">Welcome Back!</h2>
+        <p class="auth-left-sub">Log in to view your personalized meal plans, track your progress, and continue your health journey.</p>
+        <div class="auth-perks">
+          <div class="auth-perk"><span class="perk-icon">📊</span>View all your health profiles</div>
+          <div class="auth-perk"><span class="perk-icon">🍽️</span>Access your saved 7-day meal plans</div>
+          <div class="auth-perk"><span class="perk-icon">⚖️</span>Track your weight progress</div>
+          <div class="auth-perk"><span class="perk-icon">🔒</span>Your data, safe and private</div>
+        </div>
+        <div class="auth-quote">
+          <div class="quote-text">"Take care of your body. It's the only place you have to live."</div>
+          <div class="quote-author">— Jim Rohn</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Form -->
+    <div class="auth-right">
+      <div class="auth-form-wrap">
+        <div class="auth-form-header">
+          <h3>Log In to NutriAI</h3>
+          <p>Don't have an account? <a href="{{ url_for('register') }}">Sign up free</a></p>
+        </div>
+
+        {% if error %}
+        <div class="auth-error">
+          <i class="bi bi-exclamation-circle-fill me-2"></i>{{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('login') }}" id="loginForm" novalidate>
+          <input type="hidden" name="next" value="{{ next }}">
+          <div class="auth-field">
+            <label>Email Address</label>
+            <div class="auth-input-wrap">
+              <i class="bi bi-envelope-fill auth-input-icon"></i>
+              <input type="email" name="email" class="auth-input"
+                     placeholder="you@example.com" required autocomplete="email">
+            </div>
+          </div>
+          <div class="auth-field">
+            <label>
+              Password
+            </label>
+            <div class="auth-input-wrap">
+              <i class="bi bi-lock-fill auth-input-icon"></i>
+              <input type="password" name="password" class="auth-input" id="pw1"
+                     placeholder="Your password" required autocomplete="current-password">
+              <button type="button" class="auth-eye" onclick="togglePw()">
+                <i class="bi bi-eye" id="eyeIcon"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="auth-btn" id="loginBtn">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Log In
+          </button>
+
+          <div class="auth-divider"><span>or</span></div>
+          <a href="{{ url_for('register') }}" class="auth-btn-ghost">
+            <i class="bi bi-person-plus me-2"></i>Create a new account
+          </a>
+          <a href="{{ url_for('questionnaire') }}" class="auth-btn-ghost mt-2" style="font-size:0.8rem;padding:8px;">
+            Continue without an account →
+          </a>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePw() {
+  const f = document.getElementById('pw1');
+  const e = document.getElementById('eyeIcon');
+  f.type = f.type === 'password' ? 'text' : 'password';
+  e.className = f.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+}
+document.getElementById('loginForm').addEventListener('submit', function() {
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in…';
+});
+</script>
+{% endblock %}
