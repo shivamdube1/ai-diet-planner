@@ -1,131 +1,97 @@
-from models.user_model import get_db
+from db import get_db, fetchall, fetchone, execute, q, PG
 
 
 def get_all_users_with_plans():
-    """Fetch all users joined with their latest diet plan."""
     conn = get_db()
     try:
-        rows = conn.execute('''
-            SELECT
-                u.id, u.name, u.email, u.age, u.gender, u.height, u.weight,
-                u.country, u.goal, u.diet_type, u.activity_level,
-                u.sleep_hours, u.sleep_quality, u.stress_level,
-                u.water_intake, u.work_type, u.food_allergies,
-                u.breakfast_foods, u.lunch_foods, u.dinner_foods,
-                u.snacks, u.beverages, u.junk_food_frequency,
-                u.outside_food_frequency, u.target_weight,
-                u.exercise_type, u.daily_steps, u.meals_per_day,
-                u.created_at,
-                d.id        AS plan_id,
-                d.bmi, d.bmi_category, d.bmr, d.tdee,
-                d.daily_calories, d.protein, d.carbs, d.fats,
-                d.meal_plan, d.lifestyle_tips,
-                d.created_at AS plan_created_at
+        sql = '''
+            SELECT u.id, u.name, u.email, u.age, u.gender, u.height, u.weight,
+                   u.country, u.goal, u.diet_type, u.activity_level,
+                   u.sleep_hours, u.sleep_quality, u.stress_level,
+                   u.water_intake, u.work_type, u.food_allergies,
+                   u.breakfast_foods, u.lunch_foods, u.dinner_foods,
+                   u.snacks, u.beverages, u.junk_food_frequency,
+                   u.outside_food_frequency, u.target_weight,
+                   u.exercise_type, u.daily_steps, u.meals_per_day,
+                   u.medical_conditions, u.medications, u.supplements,
+                   u.cuisine_preference, u.food_dislikes, u.cooking_time,
+                   u.health_motivation, u.alcohol, u.smoking, u.body_fat_pct,
+                   u.created_at,
+                   d.id AS plan_id, d.bmi, d.bmi_category, d.bmr, d.tdee,
+                   d.daily_calories, d.protein, d.carbs, d.fats,
+                   d.meal_plan, d.lifestyle_tips, d.created_at AS plan_created_at
             FROM users u
             LEFT JOIN diet_plans d ON d.user_id = u.id
                 AND d.id = (
-                    SELECT id FROM diet_plans
-                    WHERE user_id = u.id
+                    SELECT id FROM diet_plans WHERE user_id = u.id
                     ORDER BY created_at DESC LIMIT 1
                 )
             ORDER BY u.created_at DESC
-        ''').fetchall()
-        return [dict(r) for r in rows]
+        '''
+        return fetchall(conn, q(sql))
     finally:
         conn.close()
 
 
 def get_admin_stats():
-    """Aggregate stats for the admin overview cards."""
     conn = get_db()
     try:
-        total_users   = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
-        total_plans   = conn.execute('SELECT COUNT(*) FROM diet_plans').fetchone()[0]
-        total_entries = conn.execute('SELECT COUNT(*) FROM progress').fetchone()[0]
+        total_users   = (fetchone(conn, 'SELECT COUNT(*) AS c FROM users') or {}).get('c', 0)
+        total_plans   = (fetchone(conn, 'SELECT COUNT(*) AS c FROM diet_plans') or {}).get('c', 0)
+        total_entries = (fetchone(conn, 'SELECT COUNT(*) AS c FROM progress') or {}).get('c', 0)
+        diary_entries = (fetchone(conn, 'SELECT COUNT(*) AS c FROM food_diary') or {}).get('c', 0)
 
-        goal_rows = conn.execute(
-            "SELECT goal, COUNT(*) AS cnt FROM users GROUP BY goal"
-        ).fetchall()
+        goal_rows = fetchall(conn, 'SELECT goal, COUNT(*) AS cnt FROM users GROUP BY goal')
         goals = {r['goal']: r['cnt'] for r in goal_rows}
 
-        diet_rows = conn.execute(
-            "SELECT diet_type, COUNT(*) AS cnt FROM users GROUP BY diet_type"
-        ).fetchall()
+        diet_rows = fetchall(conn, 'SELECT diet_type, COUNT(*) AS cnt FROM users GROUP BY diet_type')
         diets = {r['diet_type']: r['cnt'] for r in diet_rows}
 
-        bmi_rows = conn.execute(
-            "SELECT bmi_category, COUNT(*) AS cnt FROM diet_plans GROUP BY bmi_category"
-        ).fetchall()
+        bmi_rows = fetchall(conn, 'SELECT bmi_category, COUNT(*) AS cnt FROM diet_plans GROUP BY bmi_category')
         bmis = {r['bmi_category']: r['cnt'] for r in bmi_rows}
 
-        avg_cal = conn.execute(
-            "SELECT ROUND(AVG(daily_calories),0) FROM diet_plans"
-        ).fetchone()[0] or 0
-
-        avg_bmi = conn.execute(
-            "SELECT ROUND(AVG(bmi),1) FROM diet_plans"
-        ).fetchone()[0] or 0
-
-        recent = conn.execute(
-            "SELECT COUNT(*) FROM users WHERE created_at >= date('now','-7 days')"
-        ).fetchone()[0]
+        avg_cal_row = fetchone(conn, 'SELECT ROUND(AVG(daily_calories),0) AS v FROM diet_plans')
+        avg_bmi_row = fetchone(conn, 'SELECT ROUND(AVG(bmi),1) AS v FROM diet_plans')
+        recent_row  = fetchone(conn, q(
+            "SELECT COUNT(*) AS c FROM users WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'"
+            if PG else
+            "SELECT COUNT(*) AS c FROM users WHERE created_at >= date('now','-7 days')"
+        ))
 
         return {
-            'total_users':   total_users,
-            'total_plans':   total_plans,
-            'total_entries': total_entries,
-            'goals':         goals,
-            'diets':         diets,
-            'bmis':          bmis,
-            'avg_calories':  int(avg_cal),
-            'avg_bmi':       avg_bmi,
-            'new_this_week': recent,
+            'total_users':   int(total_users or 0),
+            'total_plans':   int(total_plans or 0),
+            'total_entries': int(total_entries or 0),
+            'diary_entries': int(diary_entries or 0),
+            'goals':  goals, 'diets': diets, 'bmis': bmis,
+            'avg_calories': int(avg_cal_row.get('v') or 0) if avg_cal_row else 0,
+            'avg_bmi':      float(avg_bmi_row.get('v') or 0) if avg_bmi_row else 0,
+            'new_this_week': int(recent_row.get('c') or 0) if recent_row else 0,
         }
     finally:
         conn.close()
 
 
 def get_user_full_detail(user_id):
-    """All columns for a single user + their plan + progress history."""
     conn = get_db()
     try:
-        user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
-        plan = conn.execute(
-            'SELECT * FROM diet_plans WHERE user_id = ? ORDER BY created_at DESC LIMIT 1',
-            (user_id,)
-        ).fetchone()
-        progress = conn.execute(
-            'SELECT * FROM progress WHERE user_id = ? ORDER BY date ASC',
-            (user_id,)
-        ).fetchall()
-        return (
-            dict(user) if user else None,
-            dict(plan)  if plan  else None,
-            [dict(p) for p in progress]
-        )
+        user     = fetchone(conn, q('SELECT * FROM users WHERE id = ?'), (user_id,))
+        plan     = fetchone(conn, q('SELECT * FROM diet_plans WHERE user_id = ? ORDER BY created_at DESC LIMIT 1'), (user_id,))
+        progress = fetchall(conn, q('SELECT * FROM progress WHERE user_id = ? ORDER BY date ASC'), (user_id,))
+        diary    = fetchall(conn, q('SELECT * FROM food_diary WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 30'), (user_id,))
+        return user, plan, progress, diary
     finally:
         conn.close()
 
 
 def delete_user_cascade(user_id):
-    """Delete a user and all their related data."""
     conn = get_db()
     try:
-        conn.execute('DELETE FROM progress   WHERE user_id = ?', (user_id,))
-        conn.execute('DELETE FROM diet_plans WHERE user_id = ?', (user_id,))
-        conn.execute('DELETE FROM users      WHERE id = ?',      (user_id,))
+        execute(conn, q('DELETE FROM food_diary WHERE user_id = ?'), (user_id,))
+        execute(conn, q('DELETE FROM progress   WHERE user_id = ?'), (user_id,))
+        execute(conn, q('DELETE FROM diet_plans WHERE user_id = ?'), (user_id,))
+        execute(conn, q('DELETE FROM users      WHERE id = ?'),      (user_id,))
         conn.commit()
-    finally:
-        conn.close()
-
-
-def get_bmi_distribution():
-    conn = get_db()
-    try:
-        rows = conn.execute(
-            "SELECT bmi_category, COUNT(*) AS cnt FROM diet_plans GROUP BY bmi_category"
-        ).fetchall()
-        return {r['bmi_category']: r['cnt'] for r in rows}
     finally:
         conn.close()
 
@@ -133,13 +99,18 @@ def get_bmi_distribution():
 def get_signups_last_30_days():
     conn = get_db()
     try:
-        rows = conn.execute("""
-            SELECT DATE(created_at) AS day, COUNT(*) AS cnt
-            FROM users
-            WHERE created_at >= DATE('now', '-30 days')
-            GROUP BY DATE(created_at)
-            ORDER BY day ASC
-        """).fetchall()
-        return [dict(r) for r in rows]
+        if PG:
+            sql = """
+                SELECT TO_CHAR(DATE(created_at),'YYYY-MM-DD') AS day, COUNT(*) AS cnt
+                FROM users WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+                GROUP BY DATE(created_at) ORDER BY day ASC
+            """
+        else:
+            sql = """
+                SELECT DATE(created_at) AS day, COUNT(*) AS cnt FROM users
+                WHERE created_at >= DATE('now','-30 days')
+                GROUP BY DATE(created_at) ORDER BY day ASC
+            """
+        return fetchall(conn, sql)
     finally:
         conn.close()

@@ -261,54 +261,93 @@
     </div>
     {% endif %}
 
-    <!-- Info Grid: Personal + Lifestyle + Eating Habits -->
-    <div class="info-grid">
-      <!-- Personal -->
+    <!-- ═══════════════════ FULL INPUT DATA ═══════════════════════════ -->
+
+    <!-- Personal + Body -->
+    <div class="info-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
       <div class="info-card">
-        <div class="info-card-title">👤 Personal Information</div>
+        <div class="info-card-title">👤 Personal & Body</div>
         <div class="info-row"><span class="label">Full Name</span><span class="value">{{ user.name }}</span></div>
         <div class="info-row"><span class="label">Email</span><span class="value">{{ user.email or '—' }}</span></div>
-        <div class="info-row"><span class="label">Age</span><span class="value">{{ user.age }} years</span></div>
-        <div class="info-row"><span class="label">Gender</span><span class="value">{{ (user.gender or '—').title() }}</span></div>
+        <div class="info-row"><span class="label">Age / Gender</span><span class="value">{{ user.age }}y / {{ (user.gender or '').title() }}</span></div>
         <div class="info-row"><span class="label">Country</span><span class="value">{{ user.country or '—' }}</span></div>
         <div class="info-row"><span class="label">Height</span><span class="value">{{ user.height }} cm</span></div>
         <div class="info-row"><span class="label">Weight</span><span class="value">{{ user.weight }} kg</span></div>
-        <div class="info-row"><span class="label">Target Weight</span><span class="value">{{ user.target_weight or 'Not set' }} {% if user.target_weight %}kg{% endif %}</span></div>
+        <div class="info-row"><span class="label">Target Weight</span><span class="value">{{ user.target_weight or 'Not set' }}{% if user.target_weight %} kg{% endif %}</span></div>
+        <div class="info-row"><span class="label">Body Fat %</span><span class="value">{{ user.body_fat_pct or 'Not provided' }}{% if user.body_fat_pct %}%{% endif %}</span></div>
         <div class="info-row"><span class="label">Body Goal</span><span class="value">{{ (user.goal or '—').replace('_',' ').title() }}</span></div>
+        <div class="info-row"><span class="label">Motivation</span><span class="value">{{ user.health_motivation or '—' }}</span></div>
+        <div class="info-row"><span class="label">Cuisine Preference</span><span class="value">{{ user.cuisine_preference or 'Indian' }}</span></div>
       </div>
-      <!-- Lifestyle -->
       <div class="info-card">
-        <div class="info-card-title">🏃 Lifestyle & Activity</div>
+        <div class="info-card-title">⚕️ Medical & Supplements</div>
+        <div class="info-row"><span class="label">Medical Conditions</span><span class="value">{{ user.medical_conditions or 'None reported' }}</span></div>
+        <div class="info-row"><span class="label">Medications</span><span class="value">{{ user.medications or 'None' }}</span></div>
+        <div class="info-row"><span class="label">Supplements</span><span class="value">{{ user.supplements or 'None' }}</span></div>
+        <div class="info-row"><span class="label">Health Issues</span><span class="value">{{ user.health_issues or 'None' }}</span></div>
+        <div class="info-row"><span class="label">Menstrual Health</span><span class="value">{{ (user.menstrual_issues or 'N/A').replace('_',' ').title() }}</span></div>
+        <div class="info-row"><span class="label">Alcohol</span><span class="value">{{ (user.alcohol or 'Never').title() }}</span></div>
+        <div class="info-row"><span class="label">Smoking</span><span class="value">{{ (user.smoking or 'Never').title() }}</span></div>
+        <div class="info-row" style="border-bottom:none;"><span class="label">Joined</span><span class="value">{{ user.created_at[:10] if user.created_at else '—' }}</span></div>
+      </div>
+    </div>
+
+    <!-- Diet + Eating Habits -->
+    <div class="info-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
+      <div class="info-card">
+        <div class="info-card-title">🥦 Diet Preferences</div>
+        <div class="info-row"><span class="label">Diet Type</span>
+          <span class="value" style="font-weight:800;color:{% if user.diet_type=='vegetarian' %}#16a34a{% elif user.diet_type=='vegan' %}#15803d{% else %}#92400e{% endif %};">
+            {{ (user.diet_type or '—').replace('_',' ').title() }}</span></div>
+        <div class="info-row"><span class="label">Food Allergies</span><span class="value">{{ user.food_allergies or 'None' }}</span></div>
+        <div class="info-row"><span class="label">Dislikes</span><span class="value">{{ user.food_dislikes or 'None' }}</span></div>
+        <div class="info-row"><span class="label">Budget</span><span class="value">{{ (user.budget_preference or 'moderate').title() }}</span></div>
+        <div class="info-row"><span class="label">Cooking Time</span><span class="value">{{ user.cooking_time or '30 min' }}</span></div>
+        <div class="info-row"><span class="label">Cooking Skill</span><span class="value">{{ (user.cooking_skill or 'basic').title() }}</span></div>
+        <div class="info-row"><span class="label">Meal Prep Style</span><span class="value">{{ (user.meal_prep or 'fresh_daily').replace('_',' ').title() }}</span></div>
+        <div class="info-row"><span class="label">Eating Speed</span><span class="value">{{ (user.eating_speed or 'normal').title() }}</span></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">🍽️ Current Eating Habits</div>
+        <div class="info-row"><span class="label">🌅 Breakfast</span><span class="value">{{ user.breakfast_foods or '—' }}</span></div>
+        <div class="info-row"><span class="label">☀️ Lunch</span><span class="value">{{ user.lunch_foods or '—' }}</span></div>
+        <div class="info-row"><span class="label">🌙 Dinner</span><span class="value">{{ user.dinner_foods or '—' }}</span></div>
+        <div class="info-row"><span class="label">🍎 Snacks</span><span class="value">{{ user.snacks or '—' }}</span></div>
+        <div class="info-row"><span class="label">☕ Beverages</span><span class="value">{{ user.beverages or '—' }}</span></div>
+        <div class="info-row"><span class="label">Meals/Day</span><span class="value">{{ user.meals_per_day or 3 }}</span></div>
+        <div class="info-row"><span class="label">Junk Food/Week</span><span class="value">{{ user.junk_food_frequency or '1–2' }}x</span></div>
+        <div class="info-row"><span class="label">Outside Food</span><span class="value">{{ (user.outside_food_frequency or '—').title() }}</span></div>
+        <div class="info-row"><span class="label">Late Night Eating</span><span class="value">{{ (user.late_night_eating or '—').title() }}</span></div>
+      </div>
+    </div>
+
+    <!-- Activity + Sleep + Stress -->
+    <div class="info-grid" style="margin-bottom:16px;">
+      <div class="info-card">
+        <div class="info-card-title">🏃 Activity & Exercise</div>
         <div class="info-row"><span class="label">Activity Level</span><span class="value">{{ (user.activity_level or '—').replace('_',' ').title() }}</span></div>
         <div class="info-row"><span class="label">Exercise Type</span><span class="value">{{ user.exercise_type or '—' }}</span></div>
         <div class="info-row"><span class="label">Daily Steps</span><span class="value">{{ user.daily_steps or '—' }}</span></div>
         <div class="info-row"><span class="label">Work Type</span><span class="value">{{ (user.work_type or '—').replace('_',' ').title() }}</span></div>
-        <div class="info-row"><span class="label">Work Hours/Day</span><span class="value">{{ user.work_hours or '—' }}h</span></div>
-        <div class="info-row"><span class="label">Sleep Hours</span><span class="value">{{ user.sleep_hours }}h</span></div>
+        <div class="info-row"><span class="label">Work Hours/Day</span><span class="value">{{ user.work_hours or 8 }}h</span></div>
+        <div class="info-row"><span class="label">Water/Day</span><span class="value">{{ user.water_intake or '—' }}</span></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">😴 Sleep Analysis</div>
+        <div class="info-row"><span class="label">Sleep Hours</span><span class="value">{{ user.sleep_hours }}h/night</span></div>
         <div class="info-row"><span class="label">Sleep Quality</span><span class="value">{{ (user.sleep_quality or '—').title() }}</span></div>
         <div class="info-row"><span class="label">Night Wakeups</span><span class="value">{{ user.night_wakeups or 0 }}/night</span></div>
         <div class="info-row"><span class="label">Daytime Fatigue</span><span class="value">{{ (user.daytime_fatigue or '—').title() }}</span></div>
-        <div class="info-row"><span class="label">Stress Level</span><span class="value">{{ (user.stress_level or '—').title() }}</span></div>
-        <div class="info-row"><span class="label">Stress Sources</span><span class="value">{{ user.stress_sources or '—' }}</span></div>
-        <div class="info-row"><span class="label">Water Intake</span><span class="value">{{ user.water_intake or '—' }}/day</span></div>
+        <div class="info-row"><span class="label">Meal Timing</span><span class="value">B:{{ user.breakfast_time or '08:00' }} L:{{ user.lunch_time or '13:00' }} D:{{ user.dinner_time or '20:00' }}</span></div>
       </div>
-      <!-- Eating Habits -->
       <div class="info-card">
-        <div class="info-card-title">🍽️ Diet & Eating Habits</div>
-        <div class="info-row"><span class="label">Diet Type</span><span class="value">{{ (user.diet_type or '—').replace('_',' ').title() }}</span></div>
-        <div class="info-row"><span class="label">Food Allergies</span><span class="value">{{ user.food_allergies or 'None' }}</span></div>
-        <div class="info-row"><span class="label">Meals/Day</span><span class="value">{{ user.meals_per_day or '—' }}</span></div>
-        <div class="info-row"><span class="label">Late Night Eating</span><span class="value">{{ (user.late_night_eating or '—').title() }}</span></div>
-        <div class="info-row"><span class="label">Outside Food</span><span class="value">{{ (user.outside_food_frequency or '—').title() }}</span></div>
-        <div class="info-row"><span class="label">Junk Food/Week</span><span class="value">{{ user.junk_food_frequency or '—' }} times</span></div>
-        <div class="info-row"><span class="label">Breakfast</span><span class="value">{{ user.breakfast_foods or '—' }}</span></div>
-        <div class="info-row"><span class="label">Lunch</span><span class="value">{{ user.lunch_foods or '—' }}</span></div>
-        <div class="info-row"><span class="label">Dinner</span><span class="value">{{ user.dinner_foods or '—' }}</span></div>
-        <div class="info-row"><span class="label">Snacks</span><span class="value">{{ user.snacks or '—' }}</span></div>
-        <div class="info-row"><span class="label">Beverages</span><span class="value">{{ user.beverages or '—' }}</span></div>
-        <div class="info-row"><span class="label">Breakfast Time</span><span class="value">{{ user.breakfast_time or '—' }}</span></div>
-        <div class="info-row"><span class="label">Lunch Time</span><span class="value">{{ user.lunch_time or '—' }}</span></div>
-        <div class="info-row"><span class="label">Dinner Time</span><span class="value">{{ user.dinner_time or '—' }}</span></div>
+        <div class="info-card-title">🧠 Stress Profile</div>
+        <div class="info-row"><span class="label">Stress Level</span>
+          <span class="value" style="color:{% if user.stress_level=='high' %}#dc2626{% elif user.stress_level=='moderate' %}#d97706{% else %}#16a34a{% endif %};">
+            {{ (user.stress_level or '—').title() }}</span></div>
+        <div class="info-row"><span class="label">Stress Sources</span><span class="value">{{ user.stress_sources or 'None reported' }}</span></div>
+        <div class="info-row"><span class="label">Alcohol</span><span class="value">{{ (user.alcohol or 'Never').title() }}</span></div>
+        <div class="info-row"><span class="label">Smoking</span><span class="value">{{ (user.smoking or 'Never').title() }}</span></div>
       </div>
     </div>
 
@@ -420,6 +459,8 @@
                   <span class="mpill mpill-p">P:{{ m.get('protein',0) }}g</span>
                   <span class="mpill mpill-c">C:{{ m.get('carbs',0) }}g</span>
                   <span class="mpill mpill-f">F:{{ m.get('fats',0) }}g</span>
+                  {% if m.get('fibre') %}<span class="mpill" style="background:#eff6ff;color:#1e40af;">Fi:{{ m.get('fibre',0) }}g</span>{% endif %}
+                  {% if m.get('prep_time') %}<span class="mpill" style="background:#fef3c7;color:#92400e;">⏱{{ m.get('prep_time','') }}</span>{% endif %}
                 </div>
               </div>
               {% endif %}
@@ -429,6 +470,37 @@
           {% endif %}
           {% endfor %}
         </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Diet Output: Foods to Avoid + Supplement Recs (if stored in plan) -->
+    {% if plan %}
+    <div class="two-col" style="margin-bottom:24px;">
+      <div class="card-block">
+        <div class="card-block-title"><i class="bi bi-shield-x-fill" style="color:#ef4444"></i> Plan Output Summary</div>
+        <div class="info-row"><span class="label">BMI</span><span class="value">{{ plan.bmi }} — {{ plan.bmi_category }}</span></div>
+        <div class="info-row"><span class="label">BMR (Basal)</span><span class="value">{{ plan.bmr|int }} kcal/day</span></div>
+        <div class="info-row"><span class="label">TDEE (Maintenance)</span><span class="value">{{ plan.tdee|int }} kcal/day</span></div>
+        <div class="info-row"><span class="label">Target Calories</span><span class="value" style="color:#16a34a;font-weight:800;">{{ plan.daily_calories|int }} kcal/day</span></div>
+        <div class="info-row"><span class="label">Protein Target</span><span class="value">{{ plan.protein|int }}g</span></div>
+        <div class="info-row"><span class="label">Carbs Target</span><span class="value">{{ plan.carbs|int }}g</span></div>
+        <div class="info-row"><span class="label">Fats Target</span><span class="value">{{ plan.fats|int }}g</span></div>
+        <div class="info-row"><span class="label">Plan Created</span><span class="value">{{ plan.created_at[:10] if plan.created_at else '—' }}</span></div>
+        <div class="info-row" style="border-bottom:none;"><span class="label">Plan Duration</span><span class="value">{{ plan.duration_weeks or 4 }} weeks</span></div>
+      </div>
+      <div class="card-block">
+        <div class="card-block-title"><i class="bi bi-person-fill" style="color:#3b82f6"></i> User Input Summary</div>
+        <div class="info-row"><span class="label">Diet Type</span>
+          <span class="value" style="font-weight:800;">{{ (user.diet_type or '—').replace('_',' ').title() }}</span></div>
+        <div class="info-row"><span class="label">Goal</span><span class="value">{{ (user.goal or '—').replace('_',' ').title() }}</span></div>
+        <div class="info-row"><span class="label">Medical Conditions</span><span class="value">{{ user.medical_conditions or 'None' }}</span></div>
+        <div class="info-row"><span class="label">Medications</span><span class="value">{{ user.medications or 'None' }}</span></div>
+        <div class="info-row"><span class="label">Supplements Taken</span><span class="value">{{ user.supplements or 'None' }}</span></div>
+        <div class="info-row"><span class="label">Cuisine Preference</span><span class="value">{{ user.cuisine_preference or 'Indian' }}</span></div>
+        <div class="info-row"><span class="label">Cooking Time</span><span class="value">{{ user.cooking_time or '30 min' }}</span></div>
+        <div class="info-row"><span class="label">Motivation</span><span class="value">{{ user.health_motivation or '—' }}</span></div>
+        <div class="info-row" style="border-bottom:none;"><span class="label">Food Dislikes</span><span class="value">{{ user.food_dislikes or 'None' }}</span></div>
       </div>
     </div>
     {% endif %}

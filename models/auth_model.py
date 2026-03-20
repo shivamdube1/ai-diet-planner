@@ -1,70 +1,84 @@
-import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
-from models.user_model import get_db
+from db import get_db, fetchone, fetchall, execute, lastrowid, serial, q, PG
+import random
 
 
 def create_accounts_table():
     conn = get_db()
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS accounts (
-            id           INTEGER PRIMARY KEY AUTOINCREMENT,
-            name         TEXT    NOT NULL,
-            email        TEXT    UNIQUE NOT NULL,
-            password     TEXT    NOT NULL,
-            avatar_color TEXT    DEFAULT '#22c55e',
-            created_at   TEXT    DEFAULT CURRENT_TIMESTAMP,
-            last_login   TEXT
-        )
-    ''')
-    # Add account_id FK to users if it doesn't already exist
-    cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
-    if 'account_id' not in cols:
-        conn.execute("ALTER TABLE users ADD COLUMN account_id INTEGER REFERENCES accounts(id)")
-    conn.commit()
-    conn.close()
+    try:
+        conn.cursor().execute(q(serial('''
+            CREATE TABLE IF NOT EXISTS accounts (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                name         TEXT    NOT NULL,
+                email        TEXT    UNIQUE NOT NULL,
+                password     TEXT    NOT NULL,
+                avatar_color TEXT    DEFAULT '#22c55e',
+                created_at   TEXT    DEFAULT CURRENT_TIMESTAMP,
+                last_login   TEXT
+            )
+        ''')))
+        conn.commit()
+    finally:
+        conn.close()
+
+    # Add account_id to users if missing
+    conn2 = get_db()
+    try:
+        if PG:
+            existing = [r['column_name'] for r in fetchall(conn2,
+                "SELECT column_name FROM information_schema.columns WHERE table_name='users'")]
+        else:
+            existing = [r[1] for r in conn2.execute("PRAGMA table_info(users)").fetchall()]
+        if 'account_id' not in existing:
+            conn2.cursor().execute("ALTER TABLE users ADD COLUMN account_id INTEGER")
+            conn2.commit()
+    except Exception:
+        pass
+    finally:
+        conn2.close()
 
 
 def register_account(name, email, password):
-    """Create a new account. Returns (account_id, None) or (None, error_msg)."""
     if get_account_by_email(email):
         return None, 'An account with this email already exists.'
     colors = ['#22c55e','#3b82f6','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#ef4444']
-    import random
     color = random.choice(colors)
     conn = get_db()
     try:
-        cur = conn.execute(
-            'INSERT INTO accounts (name, email, password, avatar_color) VALUES (?,?,?,?)',
-            (name.strip(), email.lower().strip(), generate_password_hash(password), color)
-        )
+        returning = " RETURNING id" if PG else ""
+        sql = q(f"INSERT INTO accounts (name, email, password, avatar_color) VALUES (?,?,?,?){returning}")
+        cur = execute(conn, sql, (name.strip(), email.lower().strip(),
+                                   generate_password_hash(password), color))
+        row_id = (cur.fetchone() or {}).get('id') if PG else cur.lastrowid
         conn.commit()
-        return cur.lastrowid, None
-    except sqlite3.IntegrityError:
+        return row_id, None
+    except Exception:
         return None, 'Email already registered.'
     finally:
         conn.close()
 
 
 def login_account(email, password):
-    """Verify credentials. Returns (account, None) or (None, error_msg)."""
     account = get_account_by_email(email)
     if not account:
         return None, 'No account found with that email.'
     if not check_password_hash(account['password'], password):
         return None, 'Incorrect password.'
-    # Update last_login
     conn = get_db()
-    conn.execute("UPDATE accounts SET last_login = CURRENT_TIMESTAMP WHERE id = ?", (account['id'],))
-    conn.commit()
-    conn.close()
+    try:
+        execute(conn, q("UPDATE accounts SET last_login = CURRENT_TIMESTAMP WHERE id = ?"),
+                (account['id'],))
+        conn.commit()
+    finally:
+        conn.close()
     return account, None
 
 
 def get_account_by_email(email):
     conn = get_db()
     try:
-        row = conn.execute('SELECT * FROM accounts WHERE email = ?', (email.lower().strip(),)).fetchone()
-        return dict(row) if row else None
+        return fetchone(conn, 'SELECT * FROM accounts WHERE email = ?',
+                        (email.lower().strip(),))
     finally:
         conn.close()
 
@@ -72,8 +86,7 @@ def get_account_by_email(email):
 def get_account_by_id(account_id):
     conn = get_db()
     try:
-        row = conn.execute('SELECT * FROM accounts WHERE id = ?', (account_id,)).fetchone()
-        return dict(row) if row else None
+        return fetchone(conn, 'SELECT * FROM accounts WHERE id = ?', (account_id,))
     finally:
         conn.close()
 
@@ -81,7 +94,8 @@ def get_account_by_id(account_id):
 def update_account(account_id, name, email):
     conn = get_db()
     try:
-        conn.execute('UPDATE accounts SET name=?, email=? WHERE id=?', (name, email, account_id))
+        execute(conn, q('UPDATE accounts SET name=?, email=? WHERE id=?'),
+                (name, email, account_id))
         conn.commit()
     finally:
         conn.close()
@@ -90,22 +104,19 @@ def update_account(account_id, name, email):
 def change_password(account_id, new_password):
     conn = get_db()
     try:
-        conn.execute('UPDATE accounts SET password=? WHERE id=?',
-                     (generate_password_hash(new_password), account_id))
+        execute(conn, q('UPDATE accounts SET password=? WHERE id=?'),
+                (generate_password_hash(new_password), account_id))
         conn.commit()
     finally:
         conn.close()
 
 
 def get_profiles_for_account(account_id):
-    """All health profiles (users rows) linked to an account."""
     conn = get_db()
     try:
-        rows = conn.execute(
+        return fetchall(conn,
             'SELECT * FROM users WHERE account_id = ? ORDER BY created_at DESC',
-            (account_id,)
-        ).fetchall()
-        return [dict(r) for r in rows]
+            (account_id,))
     finally:
         conn.close()
 
@@ -113,7 +124,7 @@ def get_profiles_for_account(account_id):
 def link_user_to_account(user_id, account_id):
     conn = get_db()
     try:
-        conn.execute('UPDATE users SET account_id=? WHERE id=?', (account_id, user_id))
+        execute(conn, q('UPDATE users SET account_id=? WHERE id=?'), (account_id, user_id))
         conn.commit()
     finally:
         conn.close()

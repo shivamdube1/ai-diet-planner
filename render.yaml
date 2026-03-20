@@ -1,0 +1,34 @@
+# render.yaml — One-click deploy config for Render.com
+# 1. Push to GitHub
+# 2. Go to render.com → New → Blueprint
+# 3. Point to your repo → Deploy
+# PostgreSQL database is auto-created and DATABASE_URL is auto-injected.
+
+services:
+  - type: web
+    name: nutriai-diet-planner
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --timeout 120
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nutriai-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false          # Set manually in Render dashboard
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false          # Set manually
+      - key: SITE_URL
+        sync: false          # e.g. https://your-app.onrender.com
+    healthCheckPath: /ping
+
+databases:
+  - name: nutriai-db
+    databaseName: nutriai
+    user: nutriai
+    plan: free

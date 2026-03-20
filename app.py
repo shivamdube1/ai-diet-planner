@@ -1,9 +1,10 @@
 import os, uuid, json
 from functools import wraps
+from datetime import date
 from flask import (Flask, render_template, request, jsonify,
-                   session, redirect, url_for, flash)
+                   session, redirect, url_for, flash, Response)
 from config import Config
-from models.user_model   import create_tables, save_user, get_user_by_id
+from models.user_model   import create_tables, save_user, get_user_by_id, add_extended_columns
 from models.diet_plan_model import save_diet_plan, get_diet_plan_by_user
 from models.progress_model  import add_progress_entry, get_progress_by_user, get_latest_weight
 from models.admin_model  import (get_all_users_with_plans, get_admin_stats,
@@ -12,6 +13,8 @@ from models.admin_model  import (get_all_users_with_plans, get_admin_stats,
 from models.auth_model   import (create_accounts_table, register_account, login_account,
                                   get_account_by_id, update_account, change_password,
                                   get_profiles_for_account, link_user_to_account)
+from models.diary_model  import (add_diary_entry, get_diary_by_user_date,
+                                  get_diary_by_account, delete_diary_entry, get_diary_summary)
 from services.diet_calculator  import run_all_calculations
 from services.ai_diet_generator import generate_diet_plan
 from services.health_analyzer  import analyze_health
@@ -22,137 +25,82 @@ app.secret_key = Config.SECRET_KEY
 
 os.makedirs('database', exist_ok=True)
 create_tables()
+add_extended_columns()
 create_accounts_table()
 
 
 # ── Decorators ────────────────────────────────────────────────────────────────
 def login_required(f):
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def d(*a, **k):
         if not session.get('account_id'):
             flash('Please log in to access that page.', 'warning')
             return redirect(url_for('login', next=request.path))
-        return f(*args, **kwargs)
-    return decorated
+        return f(*a, **k)
+    return d
 
 def admin_required(f):
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def d(*a, **k):
         if not session.get('admin_logged_in'):
             return redirect(url_for('admin_login'))
-        return f(*args, **kwargs)
-    return decorated
+        return f(*a, **k)
+    return d
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  AUTH ROUTES
+#  SEO & UTILITY ROUTES
 # ══════════════════════════════════════════════════════════════════════════════
 
-@app.route('/register', methods=['GET','POST'])
-def register():
-    if session.get('account_id'):
-        return redirect(url_for('my_dashboard'))
-    error = None
-    if request.method == 'POST':
-        name     = request.form.get('name','').strip()
-        email    = request.form.get('email','').strip()
-        password = request.form.get('password','')
-        confirm  = request.form.get('confirm_password','')
-        if not name or not email or not password:
-            error = 'All fields are required.'
-        elif len(password) < 6:
-            error = 'Password must be at least 6 characters.'
-        elif password != confirm:
-            error = 'Passwords do not match.'
-        else:
-            account_id, err = register_account(name, email, password)
-            if err:
-                error = err
-            else:
-                session['account_id']   = account_id
-                session['account_name'] = name
-                session['account_email']= email
-                flash(f'Welcome to NutriAI, {name}! Complete your health analysis below.', 'success')
-                return redirect(url_for('questionnaire'))
-    return render_template('auth/register.html', error=error)
+@app.route('/robots.txt')
+def robots():
+    txt = f"""User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Sitemap: {Config.SITE_URL}/sitemap.xml
+"""
+    return Response(txt, mimetype='text/plain')
 
 
-@app.route('/login', methods=['GET','POST'])
-def login():
-    if session.get('account_id'):
-        return redirect(url_for('my_dashboard'))
-    error = None
-    if request.method == 'POST':
-        email    = request.form.get('email','').strip()
-        password = request.form.get('password','')
-        account, err = login_account(email, password)
-        if err:
-            error = err
-        else:
-            session['account_id']    = account['id']
-            session['account_name']  = account['name']
-            session['account_email'] = account['email']
-            next_url = request.form.get('next') or request.args.get('next')
-            flash(f'Welcome back, {account["name"]}!', 'success')
-            return redirect(next_url if next_url and next_url.startswith('/') else url_for('my_dashboard'))
-    return render_template('auth/login.html', error=error, next=request.args.get('next',''))
+@app.route('/sitemap.xml')
+def sitemap():
+    base = Config.SITE_URL
+    pages = ['/', '/questionnaire', '/login', '/register']
+    urls = ''.join(f"""
+  <url>
+    <loc>{base}{p}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>{'1.0' if p=='/' else '0.8'}</priority>
+  </url>""" for p in pages)
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}
+</urlset>"""
+    return Response(xml, mimetype='application/xml')
 
 
-@app.route('/logout')
-def logout():
-    name = session.get('account_name','')
-    session.pop('account_id',   None)
-    session.pop('account_name', None)
-    session.pop('account_email',None)
-    flash(f'You have been logged out. See you soon, {name}!', 'info')
-    return redirect(url_for('index'))
+@app.route('/ping')
+def ping():
+    """Keep-alive endpoint — ping every 14 min to prevent Render cold start."""
+    return jsonify({'status': 'ok', 'time': str(date.today())})
 
 
-@app.route('/my-dashboard')
-@login_required
-def my_dashboard():
-    account  = get_account_by_id(session['account_id'])
-    profiles = get_profiles_for_account(session['account_id'])
-    # Build enriched profiles list
-    enriched = []
-    for p in profiles:
-        plan = get_diet_plan_by_user(p['id'])
-        prog = get_progress_by_user(p['id'])
-        enriched.append({'profile': p, 'plan': plan, 'progress_count': len(prog),
-                         'latest_weight': get_latest_weight(p['id'])})
-    return render_template('auth/my_dashboard.html', account=account, profiles=enriched)
-
-
-@app.route('/account/settings', methods=['GET','POST'])
-@login_required
-def account_settings():
-    account = get_account_by_id(session['account_id'])
-    error = success = None
-    if request.method == 'POST':
-        action = request.form.get('action')
-        if action == 'update_profile':
-            name  = request.form.get('name','').strip()
-            email = request.form.get('email','').strip()
-            if not name or not email:
-                error = 'Name and email are required.'
-            else:
-                update_account(session['account_id'], name, email)
-                session['account_name']  = name
-                session['account_email'] = email
-                flash('Profile updated successfully.', 'success')
-                return redirect(url_for('account_settings'))
-        elif action == 'change_password':
-            new_pw  = request.form.get('new_password','')
-            confirm = request.form.get('confirm_password','')
-            if len(new_pw) < 6:
-                error = 'Password must be at least 6 characters.'
-            elif new_pw != confirm:
-                error = 'Passwords do not match.'
-            else:
-                change_password(session['account_id'], new_pw)
-                flash('Password changed successfully.', 'success')
-                return redirect(url_for('account_settings'))
-    return render_template('auth/settings.html', account=account, error=error)
+@app.route('/manifest.json')
+def manifest():
+    m = {
+        "name": "NutriAI — AI Diet Planner",
+        "short_name": "NutriAI",
+        "description": "AI-powered personalised diet plans based on Harvard Plate & Eatwell Guide",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#0f172a",
+        "theme_color": "#16a34a",
+        "icons": [
+            {"src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png"},
+            {"src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png"}
+        ]
+    }
+    return jsonify(m)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -161,7 +109,8 @@ def account_settings():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    stats = get_admin_stats()
+    return render_template('index.html', stats=stats)
 
 
 @app.route('/questionnaire')
@@ -211,19 +160,31 @@ def analyze():
             'meals_per_day':    int(form.get('meals_per_day',3)),
             'outside_food_frequency': form.get('outside_food_frequency','occasionally'),
             'junk_food_frequency':    form.get('junk_food_frequency','1-2'),
+            'medical_conditions': ', '.join(form.getlist('medical_conditions')),
+            'medications':        form.get('medications',''),
+            'health_issues':      form.get('health_issues',''),
+            'menstrual_issues':   form.get('menstrual_issues','not_applicable'),
+            'body_fat_pct':       float(form.get('body_fat_pct')) if form.get('body_fat_pct') else None,
+            'cuisine_preference': form.get('cuisine_preference','Indian'),
+            'food_dislikes':      form.get('food_dislikes',''),
+            'cooking_time':       form.get('cooking_time','30 minutes'),
+            'cooking_skill':      form.get('cooking_skill','basic'),
+            'eating_speed':       form.get('eating_speed','normal'),
+            'meal_prep':          form.get('meal_prep','fresh_daily'),
+            'alcohol':            form.get('alcohol','never'),
+            'smoking':            form.get('smoking','never'),
+            'supplements':        form.get('supplements',''),
+            'health_motivation':  form.get('health_motivation',''),
         }
         metrics = run_all_calculations(user_data)
         user_data['activity_level'] = metrics['activity_level']
         user_id = save_user(user_data)
-        # Link to logged-in account if exists
         if session.get('account_id'):
             link_user_to_account(user_id, session['account_id'])
         diet_plan_data = generate_diet_plan(user_data, metrics)
         plan_record = {
-            'user_id': user_id,
-            'bmi': metrics['bmi'], 'bmi_category': metrics['bmi_category'],
-            'bmr': metrics['bmr'], 'tdee': metrics['tdee'],
-            'daily_calories': metrics['daily_calories'],
+            'user_id': user_id, 'bmi': metrics['bmi'], 'bmi_category': metrics['bmi_category'],
+            'bmr': metrics['bmr'], 'tdee': metrics['tdee'], 'daily_calories': metrics['daily_calories'],
             'protein': metrics['protein'], 'carbs': metrics['carbs'], 'fats': metrics['fats'],
             'meal_plan':      json.dumps(diet_plan_data.get('week_plan',{})),
             'lifestyle_tips': json.dumps(diet_plan_data.get('lifestyle_tips',[])),
@@ -270,23 +231,57 @@ def dashboard(user_id):
     if plan:
         week_plan      = json.loads(plan.get('meal_plan','{}'))
         lifestyle_tips = json.loads(plan.get('lifestyle_tips','[]'))
+    # Today's diary
+    diary_today = get_diary_by_user_date(user_id) if user_id else []
+    diary_summary = get_diary_summary(user_id) if user_id else {}
     return render_template('dashboard.html',
         user=user, plan=plan, week_plan=week_plan,
         lifestyle_tips=lifestyle_tips, progress_data=progress_data,
         chart_labels=json.dumps(chart_labels), chart_weights=json.dumps(chart_weights),
-        current_weight=current_weight, days=list(week_plan.keys())[:3] if week_plan else [])
+        current_weight=current_weight, days=list(week_plan.keys())[:3] if week_plan else [],
+        diary_today=diary_today, diary_summary=diary_summary)
+
+
+# ── Food Diary API ─────────────────────────────────────────────────────────────
+@app.route('/api/diary/add', methods=['POST'])
+def api_diary_add():
+    try:
+        d = request.get_json()
+        user_id    = d.get('user_id')
+        account_id = session.get('account_id')
+        entry_id = add_diary_entry(
+            user_id, account_id, d.get('meal_type','snack'),
+            d.get('food_name',''), d.get('calories',0),
+            d.get('protein',0), d.get('carbs',0), d.get('fats',0),
+            d.get('notes',''), d.get('date')
+        )
+        diary = get_diary_by_user_date(user_id, d.get('date'))
+        summary = get_diary_summary(user_id, d.get('date'))
+        return jsonify({'success': True, 'id': entry_id, 'diary': diary, 'summary': summary})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/diary/delete', methods=['POST'])
+def api_diary_delete():
+    try:
+        d = request.get_json()
+        delete_diary_entry(d.get('id'), d.get('user_id'))
+        summary = get_diary_summary(d.get('user_id'))
+        return jsonify({'success': True, 'summary': summary})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/progress/add', methods=['POST'])
 def add_progress():
     try:
-        data    = request.get_json()
+        data = request.get_json()
         user_id = data.get('user_id')
         weight  = float(data.get('weight'))
-        notes   = data.get('notes','')
         if not user_id or not weight: return jsonify({'error':'Missing fields'}),400
         if weight < 20 or weight > 500: return jsonify({'error':'Invalid weight'}),400
-        add_progress_entry(user_id, weight, notes)
+        add_progress_entry(user_id, weight, data.get('notes',''))
         progress = get_progress_by_user(user_id)
         return jsonify({'success':True,
                         'labels': [p['date']   for p in progress],
@@ -310,13 +305,110 @@ def bmi_check():
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  AUTH ROUTES
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.route('/register', methods=['GET','POST'])
+def register():
+    if session.get('account_id'): return redirect(url_for('my_dashboard'))
+    error = None
+    if request.method == 'POST':
+        name     = request.form.get('name','').strip()
+        email    = request.form.get('email','').strip()
+        password = request.form.get('password','')
+        confirm  = request.form.get('confirm_password','')
+        if not name or not email or not password: error = 'All fields are required.'
+        elif len(password) < 6: error = 'Password must be at least 6 characters.'
+        elif password != confirm: error = 'Passwords do not match.'
+        else:
+            account_id, err = register_account(name, email, password)
+            if err: error = err
+            else:
+                session['account_id']    = account_id
+                session['account_name']  = name
+                session['account_email'] = email
+                flash(f'Welcome to NutriAI, {name}! Complete your health analysis below.', 'success')
+                return redirect(url_for('questionnaire'))
+    return render_template('auth/register.html', error=error)
+
+
+@app.route('/login', methods=['GET','POST'])
+def login():
+    if session.get('account_id'): return redirect(url_for('my_dashboard'))
+    error = None
+    if request.method == 'POST':
+        email    = request.form.get('email','').strip()
+        password = request.form.get('password','')
+        account, err = login_account(email, password)
+        if err: error = err
+        else:
+            session['account_id']    = account['id']
+            session['account_name']  = account['name']
+            session['account_email'] = account['email']
+            next_url = request.form.get('next') or request.args.get('next')
+            flash(f'Welcome back, {account["name"]}!', 'success')
+            return redirect(next_url if next_url and next_url.startswith('/') else url_for('my_dashboard'))
+    return render_template('auth/login.html', error=error, next=request.args.get('next',''))
+
+
+@app.route('/logout')
+def logout():
+    name = session.get('account_name','')
+    session.clear()
+    flash(f'See you soon, {name}!', 'info')
+    return redirect(url_for('index'))
+
+
+@app.route('/my-dashboard')
+@login_required
+def my_dashboard():
+    account  = get_account_by_id(session['account_id'])
+    profiles = get_profiles_for_account(session['account_id'])
+    enriched = []
+    for p in profiles:
+        plan = get_diet_plan_by_user(p['id'])
+        prog = get_progress_by_user(p['id'])
+        enriched.append({'profile':p,'plan':plan,'progress_count':len(prog),
+                         'latest_weight':get_latest_weight(p['id'])})
+    return render_template('auth/my_dashboard.html', account=account, profiles=enriched)
+
+
+@app.route('/account/settings', methods=['GET','POST'])
+@login_required
+def account_settings():
+    account = get_account_by_id(session['account_id'])
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'update_profile':
+            name  = request.form.get('name','').strip()
+            email = request.form.get('email','').strip()
+            if not name or not email:
+                flash('Name and email are required.', 'danger')
+            else:
+                update_account(session['account_id'], name, email)
+                session['account_name']  = name
+                session['account_email'] = email
+                flash('Profile updated successfully.', 'success')
+            return redirect(url_for('account_settings'))
+        elif action == 'change_password':
+            new_pw  = request.form.get('new_password','')
+            confirm = request.form.get('confirm_password','')
+            if len(new_pw) < 6: flash('Password must be at least 6 characters.','danger')
+            elif new_pw != confirm: flash('Passwords do not match.','danger')
+            else:
+                change_password(session['account_id'], new_pw)
+                flash('Password changed successfully.', 'success')
+            return redirect(url_for('account_settings'))
+    return render_template('auth/settings.html', account=account)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 #  ADMIN ROUTES
 # ══════════════════════════════════════════════════════════════════════════════
 
 @app.route('/admin/login', methods=['GET','POST'])
 def admin_login():
-    if session.get('admin_logged_in'):
-        return redirect(url_for('admin_dashboard'))
+    if session.get('admin_logged_in'): return redirect(url_for('admin_dashboard'))
     error = None
     if request.method == 'POST':
         if (request.form.get('username') == Config.ADMIN_USERNAME and
@@ -346,14 +438,14 @@ def admin_dashboard():
 @app.route('/admin/user/<int:user_id>')
 @admin_required
 def admin_user_detail(user_id):
-    user, plan, progress = get_user_full_detail(user_id)
+    user, plan, progress, diary = get_user_full_detail(user_id)
     if not user: flash('User not found.','danger'); return redirect(url_for('admin_dashboard'))
     week_plan      = json.loads(plan.get('meal_plan','{}'))      if plan else {}
     lifestyle_tips = json.loads(plan.get('lifestyle_tips','[]')) if plan else []
     health_analysis = analyze_health(user, plan if plan else {})
     return render_template('admin/user_detail.html',
         user=user, plan=plan, week_plan=week_plan, lifestyle_tips=lifestyle_tips,
-        progress=progress,
+        progress=progress, diary=diary,
         chart_labels=json.dumps([p['date']   for p in progress]),
         chart_weights=json.dumps([p['weight'] for p in progress]),
         health_analysis=health_analysis, days=list(week_plan.keys()))
@@ -371,12 +463,10 @@ def admin_api_stats():
     return jsonify(get_admin_stats())
 
 
-# ── Error handlers ─────────────────────────────────────────────────────────
 @app.errorhandler(404)
 def not_found(e): return render_template('index.html'), 404
 @app.errorhandler(500)
 def server_error(e): return render_template('index.html'), 500
-
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

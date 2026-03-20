@@ -255,6 +255,89 @@
     </div>
 </div>
 
+<!-- Food Diary Section -->
+<div class="diary-section mt-4">
+  <div class="diary-header">
+    <h5><i class="bi bi-journal-check me-2" style="color:#16a34a"></i>Today's Food Diary
+      <small style="color:#94a3b8;font-weight:400;font-size:0.75rem;margin-left:8px;">{{ diary_today|length }} entries today</small>
+    </h5>
+    <div class="diary-totals">
+      <div class="dt-item"><span class="dt-val" id="diary-cal">{{ diary_summary.total_cal|int if diary_summary else 0 }}</span><span class="dt-lbl">kcal</span></div>
+      <div class="dt-item"><span class="dt-val" id="diary-p" style="color:#16a34a">{{ diary_summary.total_protein|int if diary_summary else 0 }}g</span><span class="dt-lbl">Protein</span></div>
+      <div class="dt-item"><span class="dt-val" id="diary-c" style="color:#d97706">{{ diary_summary.total_carbs|int if diary_summary else 0 }}g</span><span class="dt-lbl">Carbs</span></div>
+      <div class="dt-item"><span class="dt-val" id="diary-f" style="color:#dc2626">{{ diary_summary.total_fats|int if diary_summary else 0 }}g</span><span class="dt-lbl">Fats</span></div>
+      {% if plan %}
+      <div class="dt-item"><span class="dt-val" style="color:#94a3b8">/ {{ plan.daily_calories|int }}</span><span class="dt-lbl">Target</span></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Quick Add Form -->
+  <div class="diary-add-form">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label style="font-size:0.75rem;font-weight:700;color:#64748b;margin-bottom:4px;">Food Name</label>
+        <input type="text" id="d-food" class="diary-form-input" placeholder="e.g. 2 Roti + Dal">
+      </div>
+      <div class="col-md-2">
+        <label style="font-size:0.75rem;font-weight:700;color:#64748b;margin-bottom:4px;">Meal</label>
+        <select id="d-meal" class="diary-form-input">
+          <option value="breakfast">🌅 Breakfast</option>
+          <option value="lunch">☀️ Lunch</option>
+          <option value="dinner">🌙 Dinner</option>
+          <option value="snack">🍎 Snack</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label style="font-size:0.75rem;font-weight:700;color:#64748b;margin-bottom:4px;">Calories</label>
+        <input type="number" id="d-cal" class="diary-form-input" placeholder="kcal" min="0">
+      </div>
+      <div class="col-md-1">
+        <label style="font-size:0.75rem;font-weight:700;color:#64748b;margin-bottom:4px;">Protein</label>
+        <input type="number" id="d-p" class="diary-form-input" placeholder="g" min="0">
+      </div>
+      <div class="col-md-1">
+        <label style="font-size:0.75rem;font-weight:700;color:#64748b;margin-bottom:4px;">Carbs</label>
+        <input type="number" id="d-c" class="diary-form-input" placeholder="g" min="0">
+      </div>
+      <div class="col-md-1">
+        <label style="font-size:0.75rem;font-weight:700;color:#64748b;margin-bottom:4px;">Fats</label>
+        <input type="number" id="d-f" class="diary-form-input" placeholder="g" min="0">
+      </div>
+      <div class="col-md-2">
+        <button class="btn-diary-add w-100" onclick="addDiaryEntry({{ user.id }})">
+          <i class="bi bi-plus-lg me-1"></i>Add Entry
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Entries List -->
+  <div class="diary-entries" id="diaryList">
+    {% if diary_today %}
+      {% for entry in diary_today %}
+      <div class="diary-entry" id="de-{{ entry.id }}">
+        <span class="de-type de-{{ entry.meal_type }}">{{ entry.meal_type }}</span>
+        <span class="de-name">{{ entry.food_name }}</span>
+        {% if entry.protein > 0 or entry.carbs > 0 %}
+        <span style="font-size:0.72rem;color:#94a3b8;">P:{{ entry.protein|int }}g C:{{ entry.carbs|int }}g F:{{ entry.fats|int }}g</span>
+        {% endif %}
+        <span class="de-cal">{{ entry.calories }} kcal</span>
+        <button class="de-del" onclick="deleteDiaryEntry({{ entry.id }}, {{ user.id }})" title="Delete">
+          <i class="bi bi-trash3"></i>
+        </button>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="diary-empty" id="diaryEmpty">
+        <div style="font-size:2rem;margin-bottom:8px;">📝</div>
+        <p>No entries yet today. Add your first meal above!</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+
 {% endblock %}
 
 {% block scripts %}
@@ -352,4 +435,81 @@ function logWeight(userId) {
     .catch(err => alert('Network error: ' + err));
 }
 </script>
+
+// ── Food Diary JS ─────────────────────────────────────────────────────────────
+async function addDiaryEntry(userId) {
+  const food = document.getElementById('d-food').value.trim();
+  if (!food) { alert('Please enter a food name.'); return; }
+  const payload = {
+    user_id: userId,
+    food_name: food,
+    meal_type: document.getElementById('d-meal').value,
+    calories: parseInt(document.getElementById('d-cal').value) || 0,
+    protein:  parseFloat(document.getElementById('d-p').value) || 0,
+    carbs:    parseFloat(document.getElementById('d-c').value) || 0,
+    fats:     parseFloat(document.getElementById('d-f').value) || 0,
+  };
+  const btn = document.querySelector('.btn-diary-add');
+  btn.disabled = true; btn.textContent = 'Adding...';
+  try {
+    const res = await fetch('/api/diary/add', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.success) {
+      updateDiarySummary(data.summary);
+      renderDiaryList(data.diary, userId);
+      ['d-food','d-cal','d-p','d-c','d-f'].forEach(id => document.getElementById(id).value = '');
+    }
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Add Entry';
+  }
+}
+
+async function deleteDiaryEntry(entryId, userId) {
+  if (!confirm('Remove this entry?')) return;
+  const res = await fetch('/api/diary/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: entryId, user_id: userId}) });
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById('de-' + entryId)?.remove();
+    updateDiarySummary(data.summary);
+    if (document.querySelectorAll('.diary-entry').length === 0) {
+      document.getElementById('diaryList').innerHTML = '<div class="diary-empty" id="diaryEmpty"><div style="font-size:2rem;margin-bottom:8px;">📝</div><p>No entries yet today.</p></div>';
+    }
+  }
+}
+
+function updateDiarySummary(s) {
+  if (!s) return;
+  document.getElementById('diary-cal').textContent = Math.round(s.total_cal || 0);
+  document.getElementById('diary-p').textContent   = Math.round(s.total_protein || 0) + 'g';
+  document.getElementById('diary-c').textContent   = Math.round(s.total_carbs || 0) + 'g';
+  document.getElementById('diary-f').textContent   = Math.round(s.total_fats || 0) + 'g';
+}
+
+function renderDiaryList(entries, userId) {
+  const list = document.getElementById('diaryList');
+  if (!entries || entries.length === 0) {
+    list.innerHTML = '<div class="diary-empty"><div style="font-size:2rem;margin-bottom:8px;">📝</div><p>No entries yet today.</p></div>';
+    return;
+  }
+  const badge = {breakfast:'de-breakfast',lunch:'de-lunch',dinner:'de-dinner',snack:'de-snack'};
+  list.innerHTML = entries.map(e => `
+    <div class="diary-entry" id="de-${e.id}">
+      <span class="de-type ${badge[e.meal_type]||'de-snack'}">${e.meal_type}</span>
+      <span class="de-name">${e.food_name}</span>
+      ${e.protein > 0 ? `<span style="font-size:.72rem;color:#94a3b8;">P:${Math.round(e.protein)}g C:${Math.round(e.carbs)}g F:${Math.round(e.fats)}g</span>` : ''}
+      <span class="de-cal">${e.calories} kcal</span>
+      <button class="de-del" onclick="deleteDiaryEntry(${e.id},${userId})" title="Delete"><i class="bi bi-trash3"></i></button>
+    </div>`).join('');
+}
+
+// Auto-suggest calories from plan meals
+const mealTypes = ['breakfast','lunch','dinner','snack'];
+document.getElementById('d-meal').addEventListener('change', function() {
+  const food = document.getElementById('d-food').value;
+  if (!food && !document.getElementById('d-cal').value) {
+    const hints = {breakfast:300,lunch:450,dinner:400,snack:150};
+    document.getElementById('d-cal').placeholder = hints[this.value] || 'kcal';
+  }
+});
+
 {% endblock %}

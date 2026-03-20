@@ -1,227 +1,314 @@
 {% extends "base.html" %}
-
-{% block title %}NutriAI — AI-Powered Personalized Diet Planner{% endblock %}
+{% block title %}NutriAI — Free AI-Powered Personalised Diet Planner | Indian Meal Plans{% endblock %}
+{% block meta_description %}Get a free personalised 7-day AI diet plan in 60 seconds. Based on Harvard Healthy Eating Plate. Supports vegetarian, vegan, diabetes, PCOS, thyroid diets. India's most detailed nutrition analysis.{% endblock %}
 
 {% block content %}
 
 <!-- Hero Section -->
 <section class="hero-section">
-    <div class="hero-bg-decor"></div>
-    <div class="container">
-        <div class="row align-items-center min-vh-screen">
-            <div class="col-lg-6">
-                <div class="hero-badge">
-                    <i class="bi bi-stars"></i> AI-Powered Nutrition Science
-                </div>
-                <h1 class="hero-title">
-                    Get Your <span class="text-accent">AI-Powered</span><br>
-                    Personalized Diet Plan<br>
-                    in <span class="text-accent">30 Seconds</span>
-                </h1>
-                <p class="hero-subtitle">
-                    Analyze your health, lifestyle, and daily habits to generate a scientifically optimized meal plan tailored just for you.
-                </p>
-                <div class="hero-actions">
-                    <a href="{{ url_for('questionnaire') }}" class="btn btn-primary-custom btn-lg">
-                        <i class="bi bi-lightning-charge-fill me-2"></i>Start Free Health Analysis
-                    </a>
-                    <div class="hero-stats">
-                        <div class="stat">
-                            <span class="stat-num">10+</span>
-                            <span class="stat-label">Factors Analyzed</span>
-                        </div>
-                        <div class="stat-divider"></div>
-                        <div class="stat">
-                            <span class="stat-num">7-Day</span>
-                            <span class="stat-label">Meal Plan</span>
-                        </div>
-                        <div class="stat-divider"></div>
-                        <div class="stat">
-                            <span class="stat-num">100%</span>
-                            <span class="stat-label">Personalized</span>
-                        </div>
-                    </div>
-                </div>
+  <div class="hero-bg-decor"></div>
+  <div class="container">
+    <div class="row align-items-center min-vh-screen">
+      <div class="col-lg-6">
+        <div class="hero-badge"><i class="bi bi-stars"></i> Harvard Plate + Eatwell Guide Science</div>
+        <h1 class="hero-title">
+          Your <span class="text-accent">Free AI Diet Plan</span><br>
+          in 60 Seconds —<br>
+          <span class="text-accent">Personalised for You</span>
+        </h1>
+        <p class="hero-subtitle">
+          Answer 13 health questions. Get a science-backed 7-day meal plan with exact portions, macros, grocery list, and lifestyle tips — tailored to your body, goals, and medical conditions.
+        </p>
+        <div class="hero-actions">
+          <a href="{{ url_for('questionnaire') }}" class="btn btn-primary-custom btn-lg">
+            <i class="bi bi-lightning-charge-fill me-2"></i>Start Free Health Analysis
+          </a>
+          <div class="hero-stats">
+            <div class="stat">
+              <span class="stat-num">50+</span>
+              <span class="stat-label">Health Factors</span>
             </div>
-            <div class="col-lg-6 d-none d-lg-block">
-                <div class="hero-visual">
-                    <div class="hero-card hero-card-1">
-                        <div class="card-icon">🥗</div>
-                        <div>
-                            <div class="card-title">Today's Lunch</div>
-                            <div class="card-sub">Dal Tadka + 2 Roti</div>
-                        </div>
-                        <div class="card-cal">450 kcal</div>
-                    </div>
-                    <div class="hero-card hero-card-2">
-                        <div class="card-icon">⚡</div>
-                        <div>
-                            <div class="card-title">BMR Calculated</div>
-                            <div class="card-sub">1,847 kcal/day</div>
-                        </div>
-                    </div>
-                    <div class="hero-card hero-card-3">
-                        <div class="card-icon">📈</div>
-                        <div>
-                            <div class="card-title">Health Score</div>
-                            <div class="progress-mini">
-                                <div class="progress-fill" style="width: 78%"></div>
-                            </div>
-                            <div class="card-sub">78/100 — Good</div>
-                        </div>
-                    </div>
-                    <div class="hero-card hero-card-4">
-                        <div class="card-icon">💧</div>
-                        <div>
-                            <div class="card-title">Hydration Goal</div>
-                            <div class="card-sub">2.5L — On Track</div>
-                        </div>
-                    </div>
-                </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+              <span class="stat-num">7-Day</span>
+              <span class="stat-label">Meal Plan</span>
             </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+              <span class="stat-num">100%</span>
+              <span class="stat-label">Free</span>
+            </div>
+          </div>
         </div>
+        <!-- Trust badges -->
+        <div class="trust-row mt-4">
+          <span class="trust-badge"><i class="bi bi-check-circle-fill text-success me-1"></i>No credit card</span>
+          <span class="trust-badge"><i class="bi bi-check-circle-fill text-success me-1"></i>Veg/Vegan safe</span>
+          <span class="trust-badge"><i class="bi bi-check-circle-fill text-success me-1"></i>Indian foods</span>
+          <span class="trust-badge"><i class="bi bi-check-circle-fill text-success me-1"></i>Medical-aware</span>
+        </div>
+      </div>
+      <div class="col-lg-6 d-none d-lg-block">
+        <div class="hero-visual">
+          <div class="hero-card hero-card-1">
+            <div class="card-icon">🥗</div>
+            <div>
+              <div class="card-title">Sample Monday Lunch</div>
+              <div class="card-sub">2 Whole Wheat Roti + Moong Dal + Bhindi</div>
+            </div>
+            <div class="card-cal">420 kcal</div>
+          </div>
+          <div class="hero-card hero-card-2">
+            <div class="card-icon">⚡</div>
+            <div>
+              <div class="card-title">BMR + TDEE Calculated</div>
+              <div class="card-sub">Mifflin-St Jeor Formula</div>
+            </div>
+          </div>
+          <div class="hero-card hero-card-3">
+            <div class="card-icon">📈</div>
+            <div>
+              <div class="card-title">Health Score</div>
+              <div class="progress-mini"><div class="progress-fill" style="width:82%"></div></div>
+              <div class="card-sub">Based on 12 lifestyle factors</div>
+            </div>
+          </div>
+          <div class="hero-card hero-card-4">
+            <div class="card-icon">⚕️</div>
+            <div>
+              <div class="card-title">Medical-Aware Plans</div>
+              <div class="card-sub">Diabetes · PCOS · Thyroid · BP</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </section>
+
+<!-- Live Stats Banner -->
+{% if stats and stats.total_plans > 0 %}
+<section class="stats-banner">
+  <div class="container">
+    <div class="stats-banner-inner">
+      <div class="sb-stat">
+        <span class="sb-num">{{ stats.total_plans }}</span>
+        <span class="sb-label">Diet Plans Generated</span>
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-stat">
+        <span class="sb-num">{{ stats.total_users }}</span>
+        <span class="sb-label">Users Analysed</span>
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-stat">
+        <span class="sb-num">{{ stats.avg_calories }}</span>
+        <span class="sb-label">Avg kcal Target</span>
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-stat">
+        <span class="sb-num">7</span>
+        <span class="sb-label">Days Per Plan</span>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
 
 <!-- How It Works -->
 <section class="section-how">
-    <div class="container">
-        <div class="section-header text-center">
-            <span class="section-tag">Simple Process</span>
-            <h2 class="section-title">How It Works</h2>
-            <p class="section-sub">Three steps to your personalized nutrition plan</p>
-        </div>
-        <div class="row g-4 mt-2">
-            <div class="col-md-4">
-                <div class="how-card">
-                    <div class="how-step">01</div>
-                    <div class="how-icon">📋</div>
-                    <h4>Answer Health Questions</h4>
-                    <p>Share details about your body, lifestyle, eating habits, sleep patterns, and fitness goals.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="how-card how-card-featured">
-                    <div class="how-step">02</div>
-                    <div class="how-icon">🤖</div>
-                    <h4>AI Analyzes Your Lifestyle</h4>
-                    <p>Our AI calculates your BMI, BMR, TDEE and analyzes 10+ health factors for deep insights.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="how-card">
-                    <div class="how-step">03</div>
-                    <div class="how-icon">🍽️</div>
-                    <h4>Receive Your Diet Plan</h4>
-                    <p>Get a complete 7-day meal plan with macros, grocery lists, and lifestyle recommendations.</p>
-                </div>
-            </div>
-        </div>
+  <div class="container">
+    <div class="section-header text-center">
+      <span class="section-tag">Simple 3-Step Process</span>
+      <h2 class="section-title">How NutriAI Works</h2>
+      <p class="section-sub">From health data to personalised meal plan in under 60 seconds</p>
     </div>
+    <div class="row g-4 mt-2">
+      <div class="col-md-4">
+        <div class="how-card">
+          <div class="how-step">01</div>
+          <div class="how-icon">📋</div>
+          <h4>Answer 13 Health Sections</h4>
+          <p>Body metrics, medical history, diet preferences, sleep, stress, activity, digestion — we analyse 50+ health factors for maximum accuracy.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="how-card how-card-featured">
+          <div class="how-step">02</div>
+          <div class="how-icon">🤖</div>
+          <h4>AI + Science Generates Your Plan</h4>
+          <p>Google Gemini AI calculates your BMI, BMR, TDEE using Mifflin-St Jeor formula. Your plan follows Harvard Healthy Eating Plate proportions.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="how-card">
+          <div class="how-step">03</div>
+          <div class="how-icon">🍽️</div>
+          <h4>Get Your Full 7-Day Plan</h4>
+          <p>Exact portions per meal, macros (protein/carbs/fats/fibre), prep time, grocery list, and 10 lifestyle recommendations — all personalised.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
-<!-- Benefits Section -->
-<section class="section-benefits">
-    <div class="container">
-        <div class="row align-items-center g-5">
-            <div class="col-lg-5">
-                <span class="section-tag">Why NutriAI</span>
-                <h2 class="section-title">Science-Backed<br>Personalized Nutrition</h2>
-                <p class="section-sub">We don't believe in one-size-fits-all diets. Every plan is calculated using validated formulas and tailored to your unique profile.</p>
-                <a href="{{ url_for('questionnaire') }}" class="btn btn-primary-custom mt-3">
-                    Start Your Analysis <i class="bi bi-arrow-right ms-1"></i>
-                </a>
-            </div>
-            <div class="col-lg-7">
-                <div class="benefits-grid">
-                    <div class="benefit-item">
-                        <div class="benefit-icon">🎯</div>
-                        <div>
-                            <h5>Personalized Nutrition</h5>
-                            <p>Custom macros and meals based on your exact body composition and goals</p>
-                        </div>
-                    </div>
-                    <div class="benefit-item">
-                        <div class="benefit-icon">🔬</div>
-                        <div>
-                            <h5>Scientific Formulas</h5>
-                            <p>BMI, BMR, TDEE calculated using Mifflin-St Jeor and other validated methods</p>
-                        </div>
-                    </div>
-                    <div class="benefit-item">
-                        <div class="benefit-icon">🌿</div>
-                        <div>
-                            <h5>Lifestyle Improvement</h5>
-                            <p>Get actionable tips for sleep, hydration, stress management, and activity</p>
-                        </div>
-                    </div>
-                    <div class="benefit-item">
-                        <div class="benefit-icon">📊</div>
-                        <div>
-                            <h5>Progress Monitoring</h5>
-                            <p>Track your weight journey with visual charts and milestone tracking</p>
-                        </div>
-                    </div>
-                    <div class="benefit-item">
-                        <div class="benefit-icon">🛒</div>
-                        <div>
-                            <h5>Grocery List Included</h5>
-                            <p>Get a ready-made shopping list for every ingredient in your meal plan</p>
-                        </div>
-                    </div>
-                    <div class="benefit-item">
-                        <div class="benefit-icon">🇮🇳</div>
-                        <div>
-                            <h5>Indian Food Options</h5>
-                            <p>Practical, affordable meals using locally available Indian ingredients</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Diet Type Section (big selling point) -->
+<section class="section-diet-types">
+  <div class="container">
+    <div class="section-header text-center mb-4">
+      <span class="section-tag">Strict Diet Compliance</span>
+      <h2 class="section-title">Works for Every Diet Type</h2>
+      <p class="section-sub">NutriAI's AI is safety-checked — if it ever includes the wrong foods, the plan is automatically rejected and rebuilt</p>
     </div>
+    <div class="row g-3 justify-content-center">
+      <div class="col-md-4">
+        <div class="diet-type-card diet-veg">
+          <div class="dtc-icon">🥦</div>
+          <h5>Vegetarian</h5>
+          <p>Zero meat or fish — guaranteed. Plans use paneer, eggs, dal, tofu, rajma, and 20+ other protein sources.</p>
+          <div class="dtc-badge">Safety-validated</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="diet-type-card diet-vegan">
+          <div class="dtc-icon">🌱</div>
+          <h5>Vegan</h5>
+          <p>No animal products of any kind. All dairy is replaced with plant alternatives (oat milk, coconut yoghurt, tofu).</p>
+          <div class="dtc-badge">100% plant-based</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="diet-type-card diet-nonveg">
+          <div class="dtc-icon">🍗</div>
+          <h5>Non-Vegetarian</h5>
+          <p>Includes 2 fish meals/week per Eatwell Guide, lean chicken, eggs, and legumes for optimal nutrition.</p>
+          <div class="dtc-badge">Eatwell-compliant</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
-<!-- Metrics Preview -->
-<section class="section-metrics">
-    <div class="container">
-        <div class="section-header text-center">
-            <span class="section-tag">What We Analyze</span>
-            <h2 class="section-title">Comprehensive Health Analysis</h2>
-        </div>
-        <div class="row g-3 mt-2">
-            {% set metrics = [
-                ('⚖️', 'BMI', 'Body Mass Index classification'),
-                ('🔥', 'BMR', 'Basal Metabolic Rate'),
-                ('⚡', 'TDEE', 'Total Daily Energy Expenditure'),
-                ('😴', 'Sleep Quality', 'Impact on metabolism'),
-                ('🧠', 'Stress Levels', 'Cortisol and weight gain'),
-                ('🚶', 'Activity', 'Exercise and step analysis'),
-                ('💧', 'Hydration', 'Daily water intake'),
-                ('🍕', 'Eating Habits', 'Current meal patterns')
-            ] %}
-            {% for icon, name, desc in metrics %}
-            <div class="col-6 col-md-3">
-                <div class="metric-card">
-                    <span class="metric-icon">{{ icon }}</span>
-                    <h6>{{ name }}</h6>
-                    <small>{{ desc }}</small>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-<!-- CTA Section -->
-<section class="section-cta">
-    <div class="container text-center">
-        <h2>Ready to Transform Your Health?</h2>
-        <p>Join thousands who've discovered their perfect personalized diet plan</p>
-        <a href="{{ url_for('questionnaire') }}" class="btn btn-cta-white btn-lg">
-            <i class="bi bi-lightning-charge-fill me-2"></i>Get Your Free Diet Plan
+<!-- Medical Conditions -->
+<section class="section-medical">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-5">
+        <span class="section-tag">Medical-Aware Nutrition</span>
+        <h2 class="section-title">Plans That Adapt to Your Health Conditions</h2>
+        <p class="section-sub">Select your medical conditions in Section 4 of the questionnaire and NutriAI adjusts your entire diet accordingly.</p>
+        <a href="{{ url_for('questionnaire') }}" class="btn btn-primary-custom mt-3">
+          Create My Plan <i class="bi bi-arrow-right ms-1"></i>
         </a>
+      </div>
+      <div class="col-lg-7">
+        <div class="medical-grid">
+          {% for icon, cond, tip in [
+            ('🩸','Type 2 Diabetes','Low GI foods, no refined sugar, extra fibre'),
+            ('💊','Hypertension','Reduced sodium, potassium-rich foods'),
+            ('🦋','Thyroid (Hypo/Hyper)','Iodine-rich, limit raw goitrogens'),
+            ('🔄','PCOS / PCOD','Low GI, anti-inflammatory, high fibre'),
+            ('❤️','High Cholesterol','No saturated fat, oats, flaxseed, omega-3'),
+            ('🩺','Fatty Liver','No fried food, high fibre, lean protein'),
+            ('🔴','Anaemia','Iron + Vitamin C pairing, leafy greens'),
+            ('🫁','IBS / IBD','Low-FODMAP options, gut-friendly foods'),
+          ] %}
+          <div class="medical-item">
+            <span class="medical-icon">{{ icon }}</span>
+            <div>
+              <div class="medical-name">{{ cond }}</div>
+              <div class="medical-tip">{{ tip }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
+  </div>
+</section>
+
+<!-- Benefits Grid -->
+<section class="section-benefits">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-5">
+        <span class="section-tag">Why NutriAI</span>
+        <h2 class="section-title">Science-Backed<br>Personalised Nutrition</h2>
+        <p class="section-sub">Every plan follows the Harvard Healthy Eating Plate and UK Eatwell Guide — the world's most trusted nutrition frameworks.</p>
+        <a href="{{ url_for('questionnaire') }}" class="btn btn-primary-custom mt-3">
+          Start Your Analysis <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+      </div>
+      <div class="col-lg-7">
+        <div class="benefits-grid">
+          {% for icon, title, desc in [
+            ('🎯','Exact Portion Guidance','Meals specify exact grams and katoris — no guesswork'),
+            ('🔬','Validated Formulas','Mifflin-St Jeor BMR, Eatwell Guide, Harvard Plate'),
+            ('📊','Progress Tracking','Log weight entries, see visual progress charts'),
+            ('🛒','Weekly Grocery List','Ready-made shopping list for all 7 days'),
+            ('🇮🇳','Indian Food First','Roti, dal, khichdi, sabzi — practical everyday meals'),
+            ('🔒','Save All Your Plans','Create an account to access all your plans anytime'),
+          ] %}
+          <div class="benefit-item">
+            <div class="benefit-icon">{{ icon }}</div>
+            <div><h5>{{ title }}</h5><p>{{ desc }}</p></div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- What We Analyse -->
+<section class="section-metrics">
+  <div class="container">
+    <div class="section-header text-center">
+      <span class="section-tag">50+ Health Factors</span>
+      <h2 class="section-title">The Most Thorough Health Analysis</h2>
+      <p class="section-sub">No other free tool analyses this many aspects of your health</p>
+    </div>
+    <div class="row g-3 mt-2">
+      {% for icon, name, desc in [
+        ('⚖️','BMI + Body Fat','Classification & composition'),
+        ('🔥','BMR','Basal metabolic rate'),
+        ('⚡','TDEE','Total daily energy'),
+        ('😴','Sleep Quality','Metabolism impact'),
+        ('🧠','Stress Level','Cortisol & weight'),
+        ('🏃','Activity','Exercise analysis'),
+        ('💧','Hydration','Daily water intake'),
+        ('⚕️','Medical History','15 conditions checked'),
+        ('🍽️','Eating Habits','Meal pattern analysis'),
+        ('💼','Work Schedule','Energy expenditure'),
+        ('🫃','Gut Health','Digestion & absorption'),
+        ('⏰','Meal Timing','Chrono-nutrition'),
+      ] %}
+      <div class="col-6 col-md-3">
+        <div class="metric-card">
+          <span class="metric-icon">{{ icon }}</span>
+          <h6>{{ name }}</h6>
+          <small>{{ desc }}</small>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section-cta">
+  <div class="container text-center">
+    <h2>Ready to Eat Smarter?</h2>
+    <p>Join thousands who've discovered their perfect personalised diet plan — completely free</p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap mt-4">
+      <a href="{{ url_for('questionnaire') }}" class="btn btn-cta-white btn-lg">
+        <i class="bi bi-lightning-charge-fill me-2"></i>Get My Free Diet Plan
+      </a>
+      <a href="{{ url_for('register') }}" class="btn btn-cta-outline btn-lg">
+        <i class="bi bi-person-plus me-2"></i>Create Free Account
+      </a>
+    </div>
+  </div>
 </section>
 
 {% endblock %}

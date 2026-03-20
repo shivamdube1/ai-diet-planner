@@ -1439,3 +1439,136 @@ a:hover { color: var(--green-700); }
   .settings-form-row  { grid-template-columns: 1fr; }
   .mydb-plans-grid    { grid-template-columns: 1fr; }
 }
+
+/* Diet type notice banners */
+.diet-notice {
+  background: #f0fdf4; border: 1.5px solid #86efac; color: #166534;
+  border-radius: 12px; padding: 12px 16px; margin-top: 14px;
+  font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 8px;
+}
+.diet-notice-blue { background: #eff6ff; border-color: #93c5fd; color: #1e40af; }
+.diet-notice i { font-size: 1.1rem; }
+
+/* Work card 4-col variant */
+.work-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+@media (max-width: 768px) { .work-cards { grid-template-columns: repeat(2,1fr); } }
+
+/* Final review grid */
+.final-review-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.review-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; }
+.review-key  { display: block; font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.review-val  { display: block; font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-top: 2px; }
+@media (max-width: 640px) { .final-review-grid { grid-template-columns: 1fr 1fr; } }
+
+/* Admin extra detail panels */
+.admin-detail-section { margin-bottom: 20px; }
+.admin-detail-section .section-label {
+  font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+  color: #64748b; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+}
+.detail-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.detail-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 13px; }
+.detail-item .dk { font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
+.detail-item .dv { font-size: 0.85rem; font-weight: 700; color: #0f172a; margin-top: 2px; word-break: break-word; }
+@media (max-width: 900px) { .detail-grid { grid-template-columns: 1fr 1fr; } }
+
+/* ══════════════════════════════════════════════════════════════════════
+   STATS BANNER (live user counts)
+══════════════════════════════════════════════════════════════════════ */
+.stats-banner {
+  background: linear-gradient(135deg, #0f172a, #14532d);
+  padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.stats-banner-inner {
+  display: flex; justify-content: center; align-items: center;
+  gap: 0; flex-wrap: wrap;
+}
+.sb-stat { text-align: center; padding: 8px 32px; }
+.sb-num  { display: block; font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: #4ade80; line-height: 1; }
+.sb-label{ display: block; font-size: 0.72rem; color: #94a3b8; margin-top: 3px; font-weight: 500; }
+.sb-divider { width: 1px; height: 40px; background: rgba(255,255,255,0.1); }
+
+/* Trust badges */
+.trust-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+.trust-badge {
+  background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);
+  color: #d1fae5; padding: 5px 12px; border-radius: 100px;
+  font-size: 0.78rem; font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DIET TYPE CARDS
+══════════════════════════════════════════════════════════════════════ */
+.section-diet-types { background: #f8fafc; padding: 72px 0; }
+.diet-type-card {
+  background: #fff; border-radius: 18px; padding: 28px 24px;
+  border: 2px solid; text-align: center; height: 100%;
+  transition: transform 0.2s;
+}
+.diet-type-card:hover { transform: translateY(-4px); }
+.diet-veg   { border-color: #86efac; }
+.diet-vegan { border-color: #6ee7b7; }
+.diet-nonveg{ border-color: #fcd34d; }
+.dtc-icon { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+.diet-type-card h5 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: 8px; }
+.diet-type-card p  { font-size: 0.85rem; color: #64748b; line-height: 1.6; margin-bottom: 14px; }
+.dtc-badge {
+  display: inline-block; font-size: 0.72rem; font-weight: 700;
+  padding: 4px 12px; border-radius: 100px;
+  background: #dcfce7; color: #166534;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MEDICAL CONDITIONS GRID
+══════════════════════════════════════════════════════════════════════ */
+.section-medical { padding: 80px 0; }
+.medical-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.medical-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: #fff; border-radius: 14px; padding: 14px 16px;
+  border: 1.5px solid #e2e8f0; transition: all 0.15s;
+}
+.medical-item:hover { border-color: #86efac; box-shadow: 0 4px 12px rgba(22,163,74,0.08); }
+.medical-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 1px; }
+.medical-name { font-weight: 700; font-size: 0.88rem; color: #0f172a; }
+.medical-tip  { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+
+/* CTA outline button */
+.btn-cta-outline {
+  background: transparent; color: #fff;
+  border: 2px solid rgba(255,255,255,0.4); border-radius: 100px;
+  padding: 12px 28px; font-weight: 700; font-size: 1rem;
+  text-decoration: none; display: inline-flex; align-items: center;
+  transition: all 0.2s;
+}
+.btn-cta-outline:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   FOOD DIARY (dashboard)
+══════════════════════════════════════════════════════════════════════ */
+.diary-section { background: #fff; border-radius: 18px; border: 1.5px solid #e2e8f0; margin-bottom: 24px; overflow: hidden; }
+.diary-header  { padding: 18px 22px 14px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.diary-header h5 { margin: 0; font-size: 0.95rem; font-weight: 700; }
+.diary-totals  { display: flex; gap: 16px; font-size: 0.78rem; flex-wrap: wrap; }
+.dt-item { text-align: center; }
+.dt-val  { font-weight: 800; font-size: 1rem; color: #0f172a; display: block; }
+.dt-lbl  { color: #94a3b8; font-size: 0.68rem; }
+.diary-add-form { padding: 16px 22px; background: #f8fafc; border-bottom: 1px solid #f1f5f9; }
+.diary-add-form .row { gap: 0; }
+.diary-form-input { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 8px 12px; font-size: 0.85rem; width: 100%; }
+.diary-form-input:focus { outline: none; border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,0.1); }
+.btn-diary-add { background: #16a34a; color: #fff; border: none; border-radius: 10px; padding: 9px 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.btn-diary-add:hover { background: #15803d; }
+.diary-entries { padding: 12px 22px; }
+.diary-entry { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.83rem; }
+.diary-entry:last-child { border-bottom: none; }
+.de-type { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 8px; border-radius: 100px; flex-shrink: 0; }
+.de-breakfast { background: #fef3c7; color: #92400e; }
+.de-lunch     { background: #dcfce7; color: #166534; }
+.de-dinner    { background: #eff6ff; color: #1e40af; }
+.de-snack     { background: #fdf4ff; color: #7e22ce; }
+.de-name { flex: 1; font-weight: 600; color: #0f172a; }
+.de-cal  { font-size: 0.78rem; color: #16a34a; font-weight: 700; margin-left: auto; }
+.de-del  { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.85rem; padding: 0 4px; }
+.de-del:hover { color: #ef4444; }
+.diary-empty { text-align: center; padding: 28px; color: #94a3b8; font-size: 0.85rem; }
