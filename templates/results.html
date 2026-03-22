@@ -14,11 +14,26 @@
         <a href="{{ url_for('dashboard', user_id=user.id) }}" class="btn btn-primary-custom">
           <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
         </a>
-        <button onclick="window.print()" class="btn btn-outline-secondary ms-2">
+        <a href="{{ url_for('results_print', user_id=user.id, plan_id=plan.id) }}" target="_blank"
+           class="btn btn-outline-secondary ms-2">
           <i class="bi bi-printer me-2"></i>Print / Save PDF
+        </a>
+        <button onclick="sharePlan()" class="btn btn-outline-secondary ms-2">
+          <i class="bi bi-share me-2"></i>Share Plan
         </button>
       </div>
     </div>
+
+    <!-- Medical Disclaimer for condition-specific plans -->
+    {% if has_medical and user.medical_conditions and 'None' not in user.medical_conditions %}
+    <div class="alert" style="background:#fffbeb;border:1.5px solid #fbbf24;border-radius:14px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;font-size:0.85rem;color:#78350f;">
+      <span style="font-size:1.2rem;flex-shrink:0;">⚕️</span>
+      <div>
+        <strong>Medical Condition Detected:</strong> Your plan has been adapted for <strong>{{ user.medical_conditions }}</strong>.
+        This is general nutritional guidance only — please consult your doctor or a registered dietitian before making dietary changes for your specific medical conditions.
+      </div>
+    </div>
+    {% endif %}
 
     <!-- Health Metrics Row -->
     <div class="row g-3 mb-4">
@@ -386,4 +401,20 @@ if (macroCtx) {
   });
 }
 </script>
+
+// Share Plan
+function sharePlan() {
+  const url = window.location.href;
+  const title = "My 7-Day NutriAI Diet Plan";
+  if (navigator.share) {
+    navigator.share({ title, url }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      alert('Plan link copied to clipboard! Share it with anyone.');
+    });
+  } else {
+    prompt('Copy this link to share your plan:', url);
+  }
+}
+
 {% endblock %}

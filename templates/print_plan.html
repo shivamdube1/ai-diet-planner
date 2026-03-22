@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ user.name }}'s 7-Day Diet Plan — NutriAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --green: #16a34a; --dark: #0f172a; --gray: #64748b; --light: #f8fafc; --border: #e2e8f0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; color: var(--dark); background: #fff; font-size: 13px; line-height: 1.6; }
+
+    /* ── Print controls (hidden on print) ── */
+    .no-print { background: var(--dark); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .no-print h4 { color: #fff; font-size: 0.9rem; margin: 0; }
+    .btn-print { background: var(--green); color: #fff; border: none; border-radius: 100px; padding: 9px 22px; font-size: 0.88rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .btn-back { background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 100px; padding: 9px 18px; font-size: 0.85rem; text-decoration: none; display: flex; align-items: center; gap: 6px; }
+
+    /* ── Page layout ── */
+    .page { max-width: 900px; margin: 0 auto; padding: 28px 32px; }
+
+    /* ── Header ── */
+    .plan-header { border-bottom: 3px solid var(--green); padding-bottom: 18px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+    .plan-logo { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--green); font-weight: 700; }
+    .plan-logo span { font-size: 1.5rem; margin-right: 6px; }
+    .plan-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--dark); }
+    .plan-meta { font-size: 0.8rem; color: var(--gray); margin-top: 4px; }
+    .plan-date { font-size: 0.78rem; color: var(--gray); text-align: right; }
+
+    /* ── Metrics row ── */
+    .metrics-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 22px; }
+    .metric-box { background: var(--light); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; text-align: center; }
+    .metric-box .val { font-size: 1.2rem; font-weight: 700; color: var(--green); font-family: 'Playfair Display', serif; }
+    .metric-box .lbl { font-size: 0.68rem; color: var(--gray); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+    /* ── Medical disclaimer ── */
+    .medical-notice { background: #fffbeb; border: 1.5px solid #fbbf24; border-radius: 10px; padding: 10px 16px; margin-bottom: 20px; font-size: 0.8rem; color: #78350f; display: flex; align-items: flex-start; gap: 8px; }
+
+    /* ── Day sections ── */
+    .day-section { margin-bottom: 20px; break-inside: avoid; page-break-inside: avoid; }
+    .day-header { background: var(--dark); color: #fff; padding: 8px 16px; border-radius: 8px 8px 0 0; font-weight: 700; font-size: 0.88rem; display: flex; align-items: center; gap: 8px; }
+    .day-cal { margin-left: auto; font-size: 0.75rem; background: rgba(255,255,255,0.15); padding: 2px 10px; border-radius: 100px; }
+    .meals-grid { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; overflow: hidden; }
+    .meal-cell { padding: 10px 12px; border-right: 1px solid var(--border); }
+    .meal-cell:last-child { border-right: none; }
+    .meal-type { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray); margin-bottom: 5px; }
+    .meal-name { font-weight: 700; font-size: 0.82rem; color: var(--dark); margin-bottom: 4px; }
+    .meal-desc { font-size: 0.72rem; color: var(--gray); line-height: 1.4; margin-bottom: 6px; }
+    .meal-macros { display: flex; gap: 5px; flex-wrap: wrap; }
+    .mpill { font-size: 0.62rem; padding: 1px 6px; border-radius: 100px; font-weight: 700; }
+    .mp-cal { background: #f0fdf4; color: #166534; }
+    .mp-p   { background: #dcfce7; color: #166534; }
+    .mp-c   { background: #fef9c3; color: #713f12; }
+    .mp-f   { background: #fee2e2; color: #991b1b; }
+
+    /* ── Lifestyle tips ── */
+    .tips-section { margin-bottom: 20px; }
+    .tips-section h3 { font-size: 1rem; font-weight: 700; color: var(--dark); margin-bottom: 10px; border-bottom: 2px solid var(--green); padding-bottom: 6px; }
+    .tip-item { display: flex; gap: 10px; padding: 5px 0; font-size: 0.82rem; color: var(--dark); border-bottom: 1px solid var(--border); }
+    .tip-item:last-child { border-bottom: none; }
+    .tip-num { width: 20px; height: 20px; background: var(--green); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 700; flex-shrink: 0; }
+
+    /* ── Footer ── */
+    .plan-footer { border-top: 2px solid var(--border); padding-top: 14px; margin-top: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: var(--gray); }
+    .disclaimer { font-size: 0.7rem; color: #94a3b8; line-height: 1.5; max-width: 500px; }
+
+    /* ── Print styles ── */
+    @media print {
+      .no-print { display: none !important; }
+      .page { padding: 12px 16px; }
+      body { font-size: 11px; }
+      .meals-grid { grid-template-columns: repeat(4, 1fr); }
+      .day-section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Print Controls -->
+<div class="no-print">
+  <h4>🖨️ Print or save as PDF — use Ctrl+P / Cmd+P</h4>
+  <div style="display:flex;gap:10px;">
+    <a href="{{ url_for('results', user_id=user.id, plan_id=plan.id) }}" class="btn-back">← Back to Results</a>
+    <button class="btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>
+  </div>
+</div>
+
+<div class="page">
+  <!-- Header -->
+  <div class="plan-header">
+    <div>
+      <div class="plan-logo"><span>🥗</span>NutriAI</div>
+      <div class="plan-title">{{ user.name }}'s 7-Day Diet Plan</div>
+      <div class="plan-meta">
+        {{ (user.goal or '').replace('_',' ').title() }} ·
+        {{ (user.diet_type or '').replace('_',' ').title() }} ·
+        {{ user.age }}y {{ (user.gender or '').title() }} ·
+        {{ user.height }}cm / {{ user.weight }}kg
+        {% if user.medical_conditions %} · {{ user.medical_conditions }}{% endif %}
+      </div>
+    </div>
+    <div class="plan-date">
+      Generated: {{ plan.created_at[:10] if plan.created_at else '' }}<br>
+      Based on Harvard Plate + Eatwell Guide<br>
+      <a href="https://ai-diet-planner-ffmj.onrender.com" style="color:var(--green);">nutriai.onrender.com</a>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics-row">
+    <div class="metric-box"><div class="val">{{ plan.bmi }}</div><div class="lbl">BMI ({{ plan.bmi_category }})</div></div>
+    <div class="metric-box"><div class="val">{{ plan.bmr|int }}</div><div class="lbl">BMR (kcal)</div></div>
+    <div class="metric-box"><div class="val">{{ plan.tdee|int }}</div><div class="lbl">TDEE (kcal)</div></div>
+    <div class="metric-box"><div class="val" style="color:#16a34a;">{{ plan.daily_calories|int }}</div><div class="lbl">Target (kcal)</div></div>
+    <div class="metric-box"><div class="val">{{ plan.protein|int }}g / {{ plan.carbs|int }}g / {{ plan.fats|int }}g</div><div class="lbl">Protein / Carbs / Fats</div></div>
+  </div>
+
+  <!-- Medical disclaimer if applicable -->
+  {% if user.medical_conditions and 'None' not in user.medical_conditions %}
+  <div class="medical-notice">
+    ⚕️ <strong>Medical note:</strong> This plan is adapted for: {{ user.medical_conditions }}. This is general nutritional guidance only — consult your doctor or registered dietitian before making dietary changes for medical conditions.
+  </div>
+  {% endif %}
+
+  <!-- 7-Day Meal Plan -->
+  {% for day in days %}
+  {% if week_plan.get(day) %}
+  {% set day_data = week_plan[day] %}
+  {% set day_cal = (day_data.breakfast.calories|default(0)|int) + (day_data.lunch.calories|default(0)|int) + (day_data.dinner.calories|default(0)|int) + (day_data.snacks.calories|default(0)|int) %}
+  <div class="day-section">
+    <div class="day-header">
+      📅 {{ day }}
+      <span class="day-cal">~{{ day_cal }} kcal</span>
+    </div>
+    <div class="meals-grid">
+      {% for meal_key, icon, label in [('breakfast','🌅','Breakfast'),('lunch','☀️','Lunch'),('dinner','🌙','Dinner'),('snacks','🍎','Snack')] %}
+      {% if day_data.get(meal_key) %}
+      {% set m = day_data[meal_key] %}
+      <div class="meal-cell">
+        <div class="meal-type">{{ icon }} {{ label }}</div>
+        <div class="meal-name">{{ m.get('meal','—') }}</div>
+        <div class="meal-desc">{{ m.get('description','')[:100] }}{% if m.get('description','') | length > 100 %}…{% endif %}</div>
+        <div class="meal-macros">
+          <span class="mpill mp-cal">{{ m.get('calories',0) }} kcal</span>
+          <span class="mpill mp-p">P:{{ m.get('protein',0) }}g</span>
+          <span class="mpill mp-c">C:{{ m.get('carbs',0) }}g</span>
+          <span class="mpill mp-f">F:{{ m.get('fats',0) }}g</span>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+
+  <!-- Lifestyle Tips -->
+  {% if lifestyle_tips %}
+  <div class="tips-section">
+    <h3>💡 Lifestyle Recommendations</h3>
+    {% for tip in lifestyle_tips %}
+    <div class="tip-item">
+      <div class="tip-num">{{ loop.index }}</div>
+      <span>{{ tip }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Footer -->
+  <div class="plan-footer">
+    <div class="disclaimer">
+      ⚠️ <strong>Disclaimer:</strong> This plan is for general nutritional guidance only and is not a substitute for professional medical advice. Consult a qualified healthcare professional before making significant dietary changes, especially if you have a medical condition.
+    </div>
+    <div style="text-align:right;">
+      🥗 NutriAI<br>
+      <span style="color:#16a34a;">ai-diet-planner-ffmj.onrender.com</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

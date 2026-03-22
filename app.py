@@ -1,8 +1,8 @@
-import os, uuid, json
+import os, uuid, json, secrets
 from functools import wraps
 from datetime import date
 from flask import (Flask, render_template, request, jsonify,
-                   session, redirect, url_for, flash, Response)
+                   session, redirect, url_for, flash, Response, make_response)
 from config import Config
 from models.user_model   import create_tables, save_user, get_user_by_id, add_extended_columns
 from models.diet_plan_model import save_diet_plan, get_diet_plan_by_user
@@ -12,12 +12,16 @@ from models.admin_model  import (get_all_users_with_plans, get_admin_stats,
                                   get_signups_last_30_days)
 from models.auth_model   import (create_accounts_table, register_account, login_account,
                                   get_account_by_id, update_account, change_password,
-                                  get_profiles_for_account, link_user_to_account)
+                                  get_profiles_for_account, link_user_to_account,
+                                  get_account_by_email)
 from models.diary_model  import (add_diary_entry, get_diary_by_user_date,
-                                  get_diary_by_account, delete_diary_entry, get_diary_summary)
+                                  delete_diary_entry, get_diary_summary)
+from models.reset_model  import (create_reset_token_table, create_reset_token,
+                                  validate_reset_token, mark_token_used)
 from services.diet_calculator  import run_all_calculations
 from services.ai_diet_generator import generate_diet_plan
 from services.health_analyzer  import analyze_health
+from services.rate_limiter import is_allowed, get_ip
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -27,6 +31,7 @@ os.makedirs('database', exist_ok=True)
 create_tables()
 add_extended_columns()
 create_accounts_table()
+create_reset_token_table()
 
 
 # ── Decorators ────────────────────────────────────────────────────────────────
@@ -49,58 +54,35 @@ def admin_required(f):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  SEO & UTILITY ROUTES
+#  SEO / UTILITY
 # ══════════════════════════════════════════════════════════════════════════════
 
 @app.route('/robots.txt')
 def robots():
-    txt = f"""User-agent: *
-Allow: /
-Disallow: /admin/
-Disallow: /api/
-Sitemap: {Config.SITE_URL}/sitemap.xml
-"""
+    txt = f"User-agent: *\nDisallow: /admin/\nDisallow: /api/\nSitemap: {Config.SITE_URL}/sitemap.xml\n"
     return Response(txt, mimetype='text/plain')
-
 
 @app.route('/sitemap.xml')
 def sitemap():
     base = Config.SITE_URL
     pages = ['/', '/questionnaire', '/login', '/register']
     urls = ''.join(f"""
-  <url>
-    <loc>{base}{p}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>{'1.0' if p=='/' else '0.8'}</priority>
-  </url>""" for p in pages)
-    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}
-</urlset>"""
-    return Response(xml, mimetype='application/xml')
-
+  <url><loc>{base}{p}</loc><changefreq>weekly</changefreq>
+  <priority>{'1.0' if p=='/' else '0.8'}</priority></url>""" for p in pages)
+    return Response(f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>',
+                    mimetype='application/xml')
 
 @app.route('/ping')
 def ping():
-    """Keep-alive endpoint — ping every 14 min to prevent Render cold start."""
-    return jsonify({'status': 'ok', 'time': str(date.today())})
-
+    return jsonify({'status': 'ok', 'date': str(date.today())})
 
 @app.route('/manifest.json')
 def manifest():
-    m = {
-        "name": "NutriAI — AI Diet Planner",
-        "short_name": "NutriAI",
-        "description": "AI-powered personalised diet plans based on Harvard Plate & Eatwell Guide",
-        "start_url": "/",
-        "display": "standalone",
-        "background_color": "#0f172a",
-        "theme_color": "#16a34a",
-        "icons": [
-            {"src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png"},
-            {"src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png"}
-        ]
-    }
-    return jsonify(m)
+    return jsonify({"name":"NutriAI — AI Diet Planner","short_name":"NutriAI",
+        "description":"AI-powered personalised diet plans","start_url":"/",
+        "display":"standalone","background_color":"#0f172a","theme_color":"#16a34a",
+        "icons":[{"src":"/static/icon-192.png","sizes":"192x192","type":"image/png"},
+                 {"src":"/static/icon-512.png","sizes":"512x512","type":"image/png"}]})
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -112,21 +94,25 @@ def index():
     stats = get_admin_stats()
     return render_template('index.html', stats=stats)
 
-
 @app.route('/questionnaire')
 def questionnaire():
     return render_template('questionnaire.html')
 
-
 @app.route('/analyze', methods=['POST'])
 def analyze():
+    # ── Rate limit: 5 plans per IP per 10 minutes ──
+    ip = get_ip(request)
+    if not is_allowed(f'analyze:{ip}', max_calls=5, window_seconds=600):
+        flash('Too many requests. Please wait a few minutes before generating another plan.', 'warning')
+        return render_template('questionnaire.html',
+                               error='Rate limit reached. Please try again in a few minutes.'), 429
     try:
         form = request.form
         user_data = {
             'session_id': str(uuid.uuid4()),
             'name':     form.get('name','').strip() or session.get('account_name','User'),
             'email':    form.get('email','').strip() or session.get('account_email',''),
-            'age':      int(form.get('age',25)),
+            'age':      min(max(int(form.get('age',25)), 10), 100),
             'gender':   form.get('gender','male'),
             'height':   float(form.get('height',170)),
             'weight':   float(form.get('weight',70)),
@@ -211,10 +197,25 @@ def results(user_id, plan_id):
     week_plan      = json.loads(plan.get('meal_plan','{}'))
     lifestyle_tips = json.loads(plan.get('lifestyle_tips','[]'))
     health_analysis = analyze_health(user, plan)
+    has_medical = bool(user.get('medical_conditions','').strip())
     return render_template('results.html',
         user=user, plan=plan, week_plan=week_plan,
         lifestyle_tips=lifestyle_tips, health_analysis=health_analysis,
-        days=list(week_plan.keys()))
+        days=list(week_plan.keys()), has_medical=has_medical)
+
+
+@app.route('/results/<int:user_id>/<int:plan_id>/print')
+def results_print(user_id, plan_id):
+    """Printable / shareable version of the plan."""
+    user = get_user_by_id(user_id)
+    plan = get_diet_plan_by_user(user_id)
+    if not user or not plan:
+        return redirect(url_for('questionnaire'))
+    week_plan      = json.loads(plan.get('meal_plan','{}'))
+    lifestyle_tips = json.loads(plan.get('lifestyle_tips','[]'))
+    return render_template('print_plan.html',
+        user=user, plan=plan, week_plan=week_plan,
+        lifestyle_tips=lifestyle_tips, days=list(week_plan.keys()))
 
 
 @app.route('/dashboard/<int:user_id>')
@@ -231,9 +232,8 @@ def dashboard(user_id):
     if plan:
         week_plan      = json.loads(plan.get('meal_plan','{}'))
         lifestyle_tips = json.loads(plan.get('lifestyle_tips','[]'))
-    # Today's diary
-    diary_today = get_diary_by_user_date(user_id) if user_id else []
-    diary_summary = get_diary_summary(user_id) if user_id else {}
+    diary_today   = get_diary_by_user_date(user_id)
+    diary_summary = get_diary_summary(user_id)
     return render_template('dashboard.html',
         user=user, plan=plan, week_plan=week_plan,
         lifestyle_tips=lifestyle_tips, progress_data=progress_data,
@@ -242,25 +242,28 @@ def dashboard(user_id):
         diary_today=diary_today, diary_summary=diary_summary)
 
 
-# ── Food Diary API ─────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+#  API ENDPOINTS
+# ══════════════════════════════════════════════════════════════════════════════
+
 @app.route('/api/diary/add', methods=['POST'])
 def api_diary_add():
+    ip = get_ip(request)
+    if not is_allowed(f'diary:{ip}', max_calls=30, window_seconds=60):
+        return jsonify({'error': 'Too many requests'}), 429
     try:
         d = request.get_json()
-        user_id    = d.get('user_id')
-        account_id = session.get('account_id')
         entry_id = add_diary_entry(
-            user_id, account_id, d.get('meal_type','snack'),
+            d.get('user_id'), session.get('account_id'), d.get('meal_type','snack'),
             d.get('food_name',''), d.get('calories',0),
             d.get('protein',0), d.get('carbs',0), d.get('fats',0),
             d.get('notes',''), d.get('date')
         )
-        diary = get_diary_by_user_date(user_id, d.get('date'))
-        summary = get_diary_summary(user_id, d.get('date'))
+        diary   = get_diary_by_user_date(d.get('user_id'), d.get('date'))
+        summary = get_diary_summary(d.get('user_id'), d.get('date'))
         return jsonify({'success': True, 'id': entry_id, 'diary': diary, 'summary': summary})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/api/diary/delete', methods=['POST'])
 def api_diary_delete():
@@ -271,7 +274,6 @@ def api_diary_delete():
         return jsonify({'success': True, 'summary': summary})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/api/progress/add', methods=['POST'])
 def add_progress():
@@ -288,7 +290,6 @@ def add_progress():
                         'weights':[p['weight'] for p in progress]})
     except Exception as e:
         return jsonify({'error':str(e)}),500
-
 
 @app.route('/api/bmi-check', methods=['POST'])
 def bmi_check():
@@ -313,22 +314,26 @@ def register():
     if session.get('account_id'): return redirect(url_for('my_dashboard'))
     error = None
     if request.method == 'POST':
-        name     = request.form.get('name','').strip()
-        email    = request.form.get('email','').strip()
-        password = request.form.get('password','')
-        confirm  = request.form.get('confirm_password','')
-        if not name or not email or not password: error = 'All fields are required.'
-        elif len(password) < 6: error = 'Password must be at least 6 characters.'
-        elif password != confirm: error = 'Passwords do not match.'
+        ip = get_ip(request)
+        if not is_allowed(f'register:{ip}', max_calls=5, window_seconds=3600):
+            error = 'Too many registration attempts. Please try again later.'
         else:
-            account_id, err = register_account(name, email, password)
-            if err: error = err
+            name     = request.form.get('name','').strip()
+            email    = request.form.get('email','').strip()
+            password = request.form.get('password','')
+            confirm  = request.form.get('confirm_password','')
+            if not name or not email or not password: error = 'All fields are required.'
+            elif len(password) < 6: error = 'Password must be at least 6 characters.'
+            elif password != confirm: error = 'Passwords do not match.'
             else:
-                session['account_id']    = account_id
-                session['account_name']  = name
-                session['account_email'] = email
-                flash(f'Welcome to NutriAI, {name}! Complete your health analysis below.', 'success')
-                return redirect(url_for('questionnaire'))
+                account_id, err = register_account(name, email, password)
+                if err: error = err
+                else:
+                    session['account_id']    = account_id
+                    session['account_name']  = name
+                    session['account_email'] = email
+                    flash(f'Welcome to NutriAI, {name}! Complete your health analysis below.', 'success')
+                    return redirect(url_for('questionnaire'))
     return render_template('auth/register.html', error=error)
 
 
@@ -337,17 +342,21 @@ def login():
     if session.get('account_id'): return redirect(url_for('my_dashboard'))
     error = None
     if request.method == 'POST':
-        email    = request.form.get('email','').strip()
-        password = request.form.get('password','')
-        account, err = login_account(email, password)
-        if err: error = err
+        ip = get_ip(request)
+        if not is_allowed(f'login:{ip}', max_calls=10, window_seconds=300):
+            error = 'Too many login attempts. Please wait 5 minutes.'
         else:
-            session['account_id']    = account['id']
-            session['account_name']  = account['name']
-            session['account_email'] = account['email']
-            next_url = request.form.get('next') or request.args.get('next')
-            flash(f'Welcome back, {account["name"]}!', 'success')
-            return redirect(next_url if next_url and next_url.startswith('/') else url_for('my_dashboard'))
+            email    = request.form.get('email','').strip()
+            password = request.form.get('password','')
+            account, err = login_account(email, password)
+            if err: error = err
+            else:
+                session['account_id']    = account['id']
+                session['account_name']  = account['name']
+                session['account_email'] = account['email']
+                next_url = request.form.get('next') or request.args.get('next')
+                flash(f'Welcome back, {account["name"]}!', 'success')
+                return redirect(next_url if next_url and next_url.startswith('/') else url_for('my_dashboard'))
     return render_template('auth/login.html', error=error, next=request.args.get('next',''))
 
 
@@ -357,6 +366,49 @@ def logout():
     session.clear()
     flash(f'See you soon, {name}!', 'info')
     return redirect(url_for('index'))
+
+
+@app.route('/forgot-password', methods=['GET','POST'])
+def forgot_password():
+    """Step 1 — enter email to get reset link."""
+    if request.method == 'POST':
+        email = request.form.get('email','').strip().lower()
+        # Always show success to prevent email enumeration
+        account = get_account_by_email(email)
+        if account:
+            token = create_reset_token(email)
+            reset_url = url_for('reset_password', token=token, _external=True)
+            # In production you'd email this. For now, flash the link.
+            flash(f'Reset link generated. Copy this link: {reset_url}', 'info')
+        else:
+            flash('If that email is registered, a reset link has been sent.', 'info')
+        return redirect(url_for('login'))
+    return render_template('auth/forgot_password.html')
+
+
+@app.route('/reset-password/<token>', methods=['GET','POST'])
+def reset_password(token):
+    """Step 2 — enter new password."""
+    email = validate_reset_token(token)
+    if not email:
+        flash('This reset link is invalid or has expired. Please request a new one.', 'danger')
+        return redirect(url_for('forgot_password'))
+    error = None
+    if request.method == 'POST':
+        new_pw  = request.form.get('new_password','')
+        confirm = request.form.get('confirm_password','')
+        if len(new_pw) < 6:
+            error = 'Password must be at least 6 characters.'
+        elif new_pw != confirm:
+            error = 'Passwords do not match.'
+        else:
+            account = get_account_by_email(email)
+            if account:
+                change_password(account['id'], new_pw)
+                mark_token_used(token)
+                flash('Password reset successfully! Please log in.', 'success')
+                return redirect(url_for('login'))
+    return render_template('auth/reset_password.html', token=token, email=email, error=error)
 
 
 @app.route('/my-dashboard')
@@ -411,12 +463,16 @@ def admin_login():
     if session.get('admin_logged_in'): return redirect(url_for('admin_dashboard'))
     error = None
     if request.method == 'POST':
-        if (request.form.get('username') == Config.ADMIN_USERNAME and
+        ip = get_ip(request)
+        if not is_allowed(f'admin:{ip}', max_calls=5, window_seconds=300):
+            error = 'Too many attempts. Please wait 5 minutes.'
+        elif (request.form.get('username') == Config.ADMIN_USERNAME and
                 request.form.get('password') == Config.ADMIN_PASSWORD):
             session['admin_logged_in'] = True
             session['admin_username']  = request.form.get('username')
             return redirect(url_for('admin_dashboard'))
-        error = 'Invalid username or password.'
+        else:
+            error = 'Invalid username or password.'
     return render_template('admin/login.html', error=error)
 
 @app.route('/admin/logout')
