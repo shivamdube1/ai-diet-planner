@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block title %}Quick Health Analysis — NutriAI{% endblock %}
+{% block meta_description %}Get a personalised diet plan in under 60 seconds. Just 5 quick questions.{% endblock %}
+
+{% block head %}
+<style>
+.chat-page { background: linear-gradient(135deg, #0f172a 0%, #14532d 100%); min-height: 100vh; padding: 40px 0 60px; }
+.chat-container { max-width: 640px; margin: 0 auto; padding: 0 20px; }
+.chat-title { text-align: center; color: #fff; margin-bottom: 32px; }
+.chat-title h1 { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 8px; }
+.chat-title p { color: #94a3b8; font-size: 0.9rem; }
+.mode-switch { display: flex; background: rgba(255,255,255,0.08); border-radius: 100px; padding: 4px; margin-bottom: 28px; }
+.mode-btn { flex: 1; text-align: center; padding: 10px; border-radius: 100px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #94a3b8; text-decoration: none; }
+.mode-btn.active { background: #16a34a; color: #fff; }
+.mode-btn:hover:not(.active) { color: #e2e8f0; }
+.chat-bubble { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px 18px 18px 4px; padding: 16px 20px; margin-bottom: 20px; color: #e2e8f0; font-size: 0.95rem; line-height: 1.6; display: flex; gap: 12px; align-items: flex-start; }
+.chat-avatar { width: 36px; height: 36px; background: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.q-step { display: none; }
+.q-step.active { display: block; }
+.step-progress { display: flex; gap: 8px; margin-bottom: 24px; }
+.step-dot { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.15); transition: all 0.3s; }
+.step-dot.done { background: #16a34a; }
+.step-dot.current { background: #4ade80; }
+.answer-grid { display: grid; gap: 10px; margin-bottom: 20px; }
+.answer-btn { background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 14px 18px; color: #e2e8f0; font-size: 0.9rem; cursor: pointer; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 12px; }
+.answer-btn:hover { border-color: #4ade80; background: rgba(74,222,128,0.08); }
+.answer-btn.selected { border-color: #16a34a; background: rgba(22,163,74,0.2); color: #4ade80; }
+.answer-icon { font-size: 1.3rem; }
+.answer-text .title { font-weight: 600; display: block; }
+.answer-text .sub { font-size: 0.78rem; color: #94a3b8; margin-top: 2px; display: block; }
+.answer-btn.selected .answer-text .sub { color: #86efac; }
+.input-answer { background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 14px; padding: 14px 18px; color: #fff; font-size: 1rem; width: 100%; margin-bottom: 16px; outline: none; font-family: 'DM Sans', sans-serif; }
+.input-answer:focus { border-color: #16a34a; }
+.input-answer::placeholder { color: #475569; }
+.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.input-label { font-size: 0.78rem; color: #94a3b8; margin-bottom: 5px; display: block; }
+.btn-next { width: 100%; background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; border: none; border-radius: 100px; padding: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(22,163,74,0.35); }
+.btn-next:disabled { opacity: 0.5; transform: none; }
+.pro-upsell { background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15)); border: 1.5px solid rgba(139,92,246,0.3); border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+.pro-upsell-text { font-size: 0.82rem; color: #c4b5fd; line-height: 1.5; }
+.pro-upsell-text strong { color: #a78bfa; }
+.pro-link { color: #a78bfa; font-weight: 700; text-decoration: none; font-size: 0.82rem; white-space: nowrap; }
+.pro-link:hover { color: #c4b5fd; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-page">
+  <div class="chat-container">
+    <div class="chat-title">
+      <h1>🥗 Quick Diet Plan</h1>
+      <p>5 questions · 60 seconds · Your free personalised plan</p>
+    </div>
+
+    <!-- Mode switcher -->
+    <div class="mode-switch">
+      <span class="mode-btn active">⚡ Quick (Free)</span>
+      <a href="{{ url_for('questionnaire') }}" class="mode-btn">🎯 Pro (Detailed)</a>
+    </div>
+
+    <!-- Progress dots -->
+    <div class="step-progress" id="stepProgress">
+      {% for i in range(5) %}<div class="step-dot {% if i==0 %}current{% endif %}" id="dot-{{i}}"></div>{% endfor %}
+    </div>
+
+    <!-- Hidden form that gets submitted -->
+    <form method="POST" action="{{ url_for('analyze') }}" id="quickForm">
+      <input type="hidden" name="mode" value="basic">
+      <input type="hidden" name="name" id="f_name" value="NutriAI User">
+      <input type="hidden" name="age" id="f_age" value="25">
+      <input type="hidden" name="gender" id="f_gender" value="male">
+      <input type="hidden" name="height" id="f_height" value="165">
+      <input type="hidden" name="weight" id="f_weight" value="65">
+      <input type="hidden" name="goal" id="f_goal" value="maintain">
+      <input type="hidden" name="diet_type" id="f_diet" value="non_vegetarian">
+      <input type="hidden" name="activity_level" id="f_activity" value="1-2">
+      <input type="hidden" name="exercise_frequency" id="f_exercise" value="1-2">
+      <!-- Defaults for non-asked fields -->
+      <input type="hidden" name="sleep_hours" value="7">
+      <input type="hidden" name="sleep_quality" value="average">
+      <input type="hidden" name="night_wakeups" value="0">
+      <input type="hidden" name="daytime_fatigue" value="sometimes">
+      <input type="hidden" name="stress_level" value="moderate">
+      <input type="hidden" name="work_hours" value="8">
+      <input type="hidden" name="work_type" value="sedentary">
+      <input type="hidden" name="breakfast_time" value="08:00">
+      <input type="hidden" name="lunch_time" value="13:00">
+      <input type="hidden" name="dinner_time" value="20:00">
+      <input type="hidden" name="late_night_eating" value="rarely">
+      <input type="hidden" name="water_intake" value="2-3 liters">
+      <input type="hidden" name="meals_per_day" value="3">
+      <input type="hidden" name="outside_food_frequency" value="occasionally">
+      <input type="hidden" name="junk_food_frequency" value="1-2">
+      <input type="hidden" name="budget_preference" value="moderate">
+      <input type="hidden" name="cuisine_preference" value="Indian">
+      <input type="hidden" name="cooking_time" value="30 minutes">
+      <input type="hidden" name="cooking_skill" value="basic">
+      <input type="hidden" name="eating_speed" value="normal">
+      <input type="hidden" name="meal_prep" value="fresh_daily">
+      <input type="hidden" name="alcohol" value="never">
+      <input type="hidden" name="smoking" value="never">
+      <input type="hidden" name="country" value="India">
+    </form>
+
+    <!-- Step 1: Body metrics -->
+    <div class="q-step active" id="step-0">
+      <div class="chat-bubble"><div class="chat-avatar">🤖</div><div>Hi! I'm NutriAI. Let's build your diet plan in 60 seconds. First — tell me about your body.</div></div>
+      <div class="input-row">
+        <div><label class="input-label">Your Name</label><input class="input-answer" id="q_name" placeholder="e.g. Rahul" type="text"></div>
+        <div><label class="input-label">Age</label><input class="input-answer" id="q_age" placeholder="e.g. 25" type="number" min="10" max="100"></div>
+      </div>
+      <div class="input-row">
+        <div><label class="input-label">Height (cm)</label><input class="input-answer" id="q_height" placeholder="e.g. 170" type="number" min="100" max="250"></div>
+        <div><label class="input-label">Weight (kg)</label><input class="input-answer" id="q_weight" placeholder="e.g. 70" type="number" min="20" max="300"></div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label class="input-label">Gender</label>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="answer-btn" onclick="selectGender('male',this)" style="flex:1;"><span class="answer-icon">👨</span><span class="answer-text"><span class="title">Male</span></span></button>
+          <button type="button" class="answer-btn" onclick="selectGender('female',this)" style="flex:1;"><span class="answer-icon">👩</span><span class="answer-text"><span class="title">Female</span></span></button>
+          <button type="button" class="answer-btn" onclick="selectGender('other',this)" style="flex:1;"><span class="answer-icon">🧑</span><span class="answer-text"><span class="title">Other</span></span></button>
+        </div>
+      </div>
+      <button class="btn-next" onclick="goStep(1)">Next <i class="bi bi-arrow-right"></i></button>
+    </div>
+
+    <!-- Step 2: Goal -->
+    <div class="q-step" id="step-1">
+      <div class="chat-bubble"><div class="chat-avatar">🤖</div><div>Great! What's your main health goal?</div></div>
+      <div class="answer-grid">
+        <button type="button" class="answer-btn" onclick="selectAnswer('goal','weight_loss',this)"><span class="answer-icon">⬇️</span><div class="answer-text"><span class="title">Lose Weight</span><span class="sub">Calorie deficit plan to reduce body fat</span></div></button>
+        <button type="button" class="answer-btn" onclick="selectAnswer('goal','muscle_gain',this)"><span class="answer-icon">💪</span><div class="answer-text"><span class="title">Build Muscle</span><span class="sub">High protein plan with calorie surplus</span></div></button>
+        <button type="button" class="answer-btn" onclick="selectAnswer('goal','maintain',this)"><span class="answer-icon">⚖️</span><div class="answer-text"><span class="title">Stay Healthy</span><span class="sub">Balanced nutrition to maintain weight</span></div></button>
+      </div>
+      <button class="btn-next" onclick="goStep(2)" id="btn1" disabled>Next <i class="bi bi-arrow-right"></i></button>
+    </div>
+
+    <!-- Step 3: Diet type -->
+    <div class="q-step" id="step-2">
+      <div class="chat-bubble"><div class="chat-avatar">🤖</div><div>What's your diet preference? I'll strictly follow this — guaranteed.</div></div>
+      <div class="answer-grid">
+        <button type="button" class="answer-btn" onclick="selectAnswer('diet','vegetarian',this)"><span class="answer-icon">🥦</span><div class="answer-text"><span class="title">Vegetarian</span><span class="sub">No meat or fish · Includes dairy & eggs</span></div></button>
+        <button type="button" class="answer-btn" onclick="selectAnswer('diet','vegan',this)"><span class="answer-icon">🌱</span><div class="answer-text"><span class="title">Vegan</span><span class="sub">100% plant-based · No animal products</span></div></button>
+        <button type="button" class="answer-btn" onclick="selectAnswer('diet','non_vegetarian',this)"><span class="answer-icon">🍗</span><div class="answer-text"><span class="title">Non-Vegetarian</span><span class="sub">Includes chicken, fish, eggs</span></div></button>
+      </div>
+      <button class="btn-next" onclick="goStep(3)" id="btn2" disabled>Next <i class="bi bi-arrow-right"></i></button>
+    </div>
+
+    <!-- Step 4: Activity -->
+    <div class="q-step" id="step-3">
+      <div class="chat-bubble"><div class="chat-avatar">🤖</div><div>How active are you on a typical day?</div></div>
+      <div class="answer-grid">
+        <button type="button" class="answer-btn" onclick="selectAnswer('activity','0',this)"><span class="answer-icon">🛋️</span><div class="answer-text"><span class="title">Sedentary</span><span class="sub">Desk job, little or no exercise</span></div></button>
+        <button type="button" class="answer-btn" onclick="selectAnswer('activity','1-2',this)"><span class="answer-icon">🚶</span><div class="answer-text"><span class="title">Lightly Active</span><span class="sub">Exercise 1–2 days/week</span></div></button>
+        <button type="button" class="answer-btn" onclick="selectAnswer('activity','3-5',this)"><span class="answer-icon">🏃</span><div class="answer-text"><span class="title">Moderately Active</span><span class="sub">Exercise 3–5 days/week</span></div></button>
+        <button type="button" class="answer-btn" onclick="selectAnswer('activity','6-7',this)"><span class="answer-icon">🏋️</span><div class="answer-text"><span class="title">Very Active</span><span class="sub">Daily exercise or physical job</span></div></button>
+      </div>
+      <button class="btn-next" onclick="goStep(4)" id="btn3" disabled>Next <i class="bi bi-arrow-right"></i></button>
+    </div>
+
+    <!-- Step 5: Any medical / allergies -->
+    <div class="q-step" id="step-4">
+      <div class="chat-bubble"><div class="chat-avatar">🤖</div><div>Last question — any medical conditions or allergies I should know about? Your plan will be adjusted accordingly.</div></div>
+      <div class="answer-grid" id="medGrid">
+        {% for icon, cond in [('🩸','Type 2 Diabetes'),('💊','Hypertension'),('🔄','PCOS/PCOD'),('🦋','Thyroid'),('❤️','High Cholesterol'),('🫁','IBS/IBD'),('🥜','Nut allergy'),('🌾','Gluten-free'),('🥛','Lactose-free')] %}
+        <button type="button" class="answer-btn" onclick="toggleMedical('{{cond}}',this)" style="padding:10px 14px;">
+          <span class="answer-icon">{{icon}}</span>
+          <div class="answer-text"><span class="title">{{cond}}</span></div>
+        </button>
+        {% endfor %}
+        <button type="button" class="answer-btn selected" onclick="selectNone(this)" id="noneBtn">
+          <span class="answer-icon">✅</span>
+          <div class="answer-text"><span class="title">None of the above</span></div>
+        </button>
+      </div>
+
+      <div class="pro-upsell">
+        <span style="font-size:1.4rem">🎯</span>
+        <div class="pro-upsell-text">
+          <strong>Want a deeper analysis?</strong> Switch to <strong>Pro mode</strong> for 13 sections covering sleep, stress, gut health, digestion, work schedule and more — for a truly personalised plan.
+          <br><a href="{{ url_for('questionnaire') }}" class="pro-link">Try Pro mode →</a>
+        </div>
+      </div>
+
+      <input type="hidden" name="medical_conditions" id="f_medical" value="">
+      <input type="hidden" name="food_allergies" id="f_allergies" value="">
+      <button class="btn-next" id="submitBtn" onclick="submitQuick()">
+        <i class="bi bi-lightning-charge-fill"></i> Generate My Free Plan
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="ai-loading-overlay" id="loadingOverlay">
+  <div class="ai-loading-content">
+    <div class="ai-spinner"><div class="spinner-ring"></div><div class="spinner-ring"></div><div class="spinner-ring"></div></div>
+    <div class="ai-loading-icon">🤖</div>
+    <h3 class="ai-loading-title">Creating Your Plan</h3>
+    <p class="ai-loading-sub" id="loadMsg">Calculating your BMR & TDEE...</p>
+    <div class="loading-steps">
+      <div class="loading-step active" id="ls1">📊 Health calculations</div>
+      <div class="loading-step" id="ls2">🤖 AI generating meals</div>
+      <div class="loading-step" id="ls3">🍽️ Personalising for you</div>
+      <div class="loading-step" id="ls4">✨ Almost ready!</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentStep = 0;
+const selections = { goal: null, diet: null, activity: null, medical: [], gender: null };
+
+function updateDots(step) {
+  for (let i = 0; i < 5; i++) {
+    const d = document.getElementById('dot-' + i);
+    d.className = 'step-dot ' + (i < step ? 'done' : i === step ? 'current' : '');
+  }
+}
+
+function goStep(n) {
+  // Validate current step
+  if (n === 1) {
+    const name = document.getElementById('q_name').value.trim();
+    const age  = document.getElementById('q_age').value;
+    const h    = document.getElementById('q_height').value;
+    const w    = document.getElementById('q_weight').value;
+    if (!name || !age || !h || !w || !selections.gender) {
+      alert('Please fill in all fields and select gender.');
+      return;
+    }
+    document.getElementById('f_name').value   = name;
+    document.getElementById('f_age').value    = Math.min(Math.max(parseInt(age), 10), 100);
+    document.getElementById('f_height').value = h;
+    document.getElementById('f_weight').value = w;
+    document.getElementById('f_gender').value = selections.gender;
+  }
+  document.getElementById('step-' + currentStep).classList.remove('active');
+  currentStep = n;
+  document.getElementById('step-' + n).classList.add('active');
+  updateDots(n);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selectGender(val, el) {
+  selections.gender = val;
+  document.querySelectorAll('#step-0 .answer-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selectAnswer(type, val, el) {
+  selections[type] = val;
+  el.closest('.answer-grid').querySelectorAll('.answer-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  const btnMap = { goal: 'btn1', diet: 'btn2', activity: 'btn3' };
+  const btn = document.getElementById(btnMap[type]);
+  if (btn) btn.disabled = false;
+
+  if (type === 'goal')     document.getElementById('f_goal').value     = val;
+  if (type === 'diet')     document.getElementById('f_diet').value      = val;
+  if (type === 'activity') { document.getElementById('f_activity').value = val; document.getElementById('f_exercise').value = val; }
+}
+
+function toggleMedical(cond, el) {
+  document.getElementById('noneBtn').classList.remove('selected');
+  const idx = selections.medical.indexOf(cond);
+  if (idx === -1) { selections.medical.push(cond); el.classList.add('selected'); }
+  else { selections.medical.splice(idx, 1); el.classList.remove('selected'); }
+  updateMedical();
+}
+
+function selectNone(el) {
+  selections.medical = [];
+  document.querySelectorAll('#medGrid .answer-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  updateMedical();
+}
+
+function updateMedical() {
+  const med = selections.medical.filter(m => !['Nut allergy','Gluten-free','Lactose-free'].includes(m));
+  const allergy = selections.medical.filter(m => ['Nut allergy','Gluten-free','Lactose-free'].includes(m));
+  document.getElementById('f_medical').value   = med.join(', ');
+  document.getElementById('f_allergies').value = allergy.join(', ');
+}
+
+function submitQuick() {
+  document.getElementById('loadingOverlay').style.display = 'flex';
+  const msgs = ["Calculating your BMR & TDEE...","AI building your 7-day plan...","Selecting perfect Indian recipes...","Almost ready!"];
+  const steps = ['ls1','ls2','ls3','ls4'];
+  let i = 0;
+  const iv = setInterval(() => {
+    i++;
+    if (i < msgs.length) {
+      document.getElementById('loadMsg').textContent = msgs[i];
+      steps.forEach((id,idx) => {
+        document.getElementById(id)?.classList.toggle('active', idx===i);
+        document.getElementById(id)?.classList.toggle('done', idx<i);
+      });
+    }
+    if (i >= msgs.length-1) clearInterval(iv);
+  }, 3500);
+  document.getElementById('quickForm').submit();
+}
+
+updateDots(0);
+</script>
+{% endblock %}

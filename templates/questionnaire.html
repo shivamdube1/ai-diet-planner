@@ -6,9 +6,15 @@
   <div class="container py-5">
 
     <div class="text-center mb-4">
-      <span class="section-tag">Comprehensive Health Assessment</span>
+      <span class="section-tag">🎯 Pro Mode — Comprehensive Health Assessment</span>
       <h2 class="page-title mt-2">Your Complete Health Profile</h2>
-      <p class="page-sub">13 sections · ~5 minutes · Get your personalised AI diet plan</p>
+      <p class="page-sub">13 sections · ~5 minutes · Most personalised results</p>
+    </div>
+
+    <!-- Mode switcher -->
+    <div style="display:flex;background:#f1f5f9;border-radius:100px;padding:4px;max-width:400px;margin:0 auto 24px;">
+      <a href="{{ url_for('quick_questionnaire') }}" style="flex:1;text-align:center;padding:9px;border-radius:100px;font-size:0.85rem;font-weight:600;color:#64748b;text-decoration:none;">⚡ Quick (60 sec)</a>
+      <span style="flex:1;text-align:center;padding:9px;border-radius:100px;font-size:0.85rem;font-weight:700;background:#16a34a;color:#fff;">🎯 Pro (5 min)</span>
     </div>
 
     {% if error %}

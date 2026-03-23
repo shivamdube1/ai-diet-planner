@@ -22,6 +22,9 @@ from services.diet_calculator  import run_all_calculations
 from services.ai_diet_generator import generate_diet_plan
 from services.health_analyzer  import analyze_health
 from services.rate_limiter import is_allowed, get_ip
+from services.plan_cache import get_cached, set_cached, cache_stats
+from services.vision_service import analyze_food_image, analyze_voice_text
+from services.meal_swap import swap_meal
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -98,6 +101,10 @@ def index():
 def questionnaire():
     return render_template('questionnaire.html')
 
+@app.route('/quick')
+def quick_questionnaire():
+    return render_template('quick_questionnaire.html')
+
 @app.route('/analyze', methods=['POST'])
 def analyze():
     # ── Rate limit: 5 plans per IP per 10 minutes ──
@@ -167,7 +174,11 @@ def analyze():
         user_id = save_user(user_data)
         if session.get('account_id'):
             link_user_to_account(user_id, session['account_id'])
-        diet_plan_data = generate_diet_plan(user_data, metrics)
+        # Try cache first (saves Gemini API calls for similar profiles)
+        diet_plan_data = get_cached(user_data, metrics)
+        if not diet_plan_data:
+            diet_plan_data = generate_diet_plan(user_data, metrics)
+            set_cached(user_data, metrics, diet_plan_data)
         plan_record = {
             'user_id': user_id, 'bmi': metrics['bmi'], 'bmi_category': metrics['bmi_category'],
             'bmr': metrics['bmr'], 'tdee': metrics['tdee'], 'daily_calories': metrics['daily_calories'],
@@ -198,10 +209,22 @@ def results(user_id, plan_id):
     lifestyle_tips = json.loads(plan.get('lifestyle_tips','[]'))
     health_analysis = analyze_health(user, plan)
     has_medical = bool(user.get('medical_conditions','').strip())
+    # Load full plan data for grocery list etc.
+    from services.ai_diet_generator import get_fallback_plan
+    from services.diet_calculator import run_all_calculations
+    try:
+        metrics_for_plan = run_all_calculations(user)
+        plan_data = get_fallback_plan(user, metrics_for_plan)
+        # Use stored lifestyle_tips if available
+        if lifestyle_tips:
+            plan_data['lifestyle_tips'] = lifestyle_tips
+    except Exception:
+        plan_data = {}
     return render_template('results.html',
         user=user, plan=plan, week_plan=week_plan,
         lifestyle_tips=lifestyle_tips, health_analysis=health_analysis,
-        days=list(week_plan.keys()), has_medical=has_medical)
+        days=list(week_plan.keys()), has_medical=has_medical,
+        plan_data=plan_data)
 
 
 @app.route('/results/<int:user_id>/<int:plan_id>/print')
@@ -517,6 +540,74 @@ def admin_delete_user(user_id):
 @admin_required
 def admin_api_stats():
     return jsonify(get_admin_stats())
+
+
+# ── NEW FEATURE API ROUTES ────────────────────────────────────────────────
+
+@app.route('/api/swap-meal', methods=['POST'])
+def api_swap_meal():
+    ip = get_ip(request)
+    if not is_allowed(f'swap:{ip}', max_calls=20, window_seconds=60):
+        return jsonify({'error': 'Too many requests'}), 429
+    try:
+        d = request.get_json()
+        user = get_user_by_id(d.get('user_id'))
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        plan_targets = get_diet_plan_by_user(d.get('user_id')) or {}
+        new_meal = swap_meal(
+            d.get('day', 'Monday'),
+            d.get('meal_type', 'lunch'),
+            d.get('current_meal', {}),
+            user,
+            plan_targets
+        )
+        return jsonify({'success': True, 'meal': new_meal})
+    except Exception as e:
+        app.logger.error(f"Swap meal error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/analyze-food-image', methods=['POST'])
+def api_analyze_food_image():
+    ip = get_ip(request)
+    if not is_allowed(f'vision:{ip}', max_calls=10, window_seconds=60):
+        return jsonify({'error': 'Too many requests'}), 429
+    try:
+        d = request.get_json()
+        image_data = d.get('image', '')
+        mime_type  = d.get('mime_type', 'image/jpeg')
+        if not image_data:
+            return jsonify({'error': 'No image provided'}), 400
+        if len(image_data) > 10 * 1024 * 1024:
+            return jsonify({'error': 'Image too large (max 10MB)'}), 400
+        result = analyze_food_image(image_data, mime_type)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/voice-log', methods=['POST'])
+def api_voice_log():
+    ip = get_ip(request)
+    if not is_allowed(f'voice:{ip}', max_calls=20, window_seconds=60):
+        return jsonify({'error': 'Too many requests'}), 429
+    try:
+        d = request.get_json()
+        transcript = d.get('transcript', '').strip()
+        if not transcript:
+            return jsonify({'error': 'No transcript provided'}), 400
+        user = get_user_by_id(d.get('user_id')) if d.get('user_id') else {}
+        result = analyze_voice_text(transcript, user)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/cache-stats')
+@admin_required
+def api_cache_stats():
+    return jsonify(cache_stats())
 
 
 @app.errorhandler(404)

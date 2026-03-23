@@ -1572,3 +1572,49 @@ a:hover { color: var(--green-700); }
 .de-del  { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.85rem; padding: 0 4px; }
 .de-del:hover { color: #ef4444; }
 .diary-empty { text-align: center; padding: 28px; color: #94a3b8; font-size: 0.85rem; }
+
+/* ══════════════════════════════════════════════════════════════
+   MEAL SWAP BUTTON
+══════════════════════════════════════════════════════════════ */
+.btn-swap-meal {
+  width: 100%; margin-top: 10px;
+  background: #f8fafc; color: #475569;
+  border: 1.5px solid #e2e8f0; border-radius: 100px;
+  padding: 7px; font-size: 0.78rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-swap-meal:hover { background: #16a34a; color: #fff; border-color: #16a34a; }
+
+/* ══════════════════════════════════════════════════════════════
+   GROCERY LIST
+══════════════════════════════════════════════════════════════ */
+.grocery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.grocery-category { background: #f8fafc; border-radius: 12px; padding: 12px 14px; border: 1px solid #e2e8f0; }
+.grocery-cat-header { font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 8px; }
+.grocery-item { font-size: 0.82rem; color: #475569; padding: 4px 0; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; }
+.grocery-item:last-child { border-bottom: none; }
+
+/* ══════════════════════════════════════════════════════════════
+   FOOD SCAN & VOICE ZONES
+══════════════════════════════════════════════════════════════ */
+.scan-zone {
+  background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 16px;
+  padding: 16px; cursor: pointer; transition: all 0.2s; min-height: 160px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.scan-zone:hover { border-color: #16a34a; background: #f0fdf4; }
+.scan-placeholder { text-align: center; }
+.btn-voice {
+  width: 100%; background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff; border: none; border-radius: 100px;
+  padding: 10px; font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.btn-voice:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(22,163,74,0.35); }
+
+@media (max-width: 640px) {
+  .grocery-grid { grid-template-columns: 1fr 1fr; }
+  .scan-zone { min-height: 120px; }
+}
