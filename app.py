@@ -521,8 +521,15 @@ def admin_api_stats():
 
 @app.errorhandler(404)
 def not_found(e): return render_template('index.html'), 404
+
 @app.errorhandler(500)
-def server_error(e): return render_template('index.html'), 500
+def server_error(e):
+    app.logger.error(f'500 error: {e}')
+    # If admin route, show error details
+    from flask import request as req
+    if req.path.startswith('/admin'):
+        return f'<h2>Admin Error (500)</h2><pre>{e}</pre><a href="/admin/dashboard">Retry</a>', 500
+    return render_template('index.html'), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
