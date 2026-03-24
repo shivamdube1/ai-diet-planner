@@ -434,7 +434,7 @@ function logWeight(userId) {
     })
     .catch(err => alert('Network error: ' + err));
 }
-</script>
+
 
 // ── Food Diary JS ─────────────────────────────────────────────────────────────
 async function addDiaryEntry(userId) {
@@ -511,5 +511,5 @@ document.getElementById('d-meal').addEventListener('change', function() {
     document.getElementById('d-cal').placeholder = hints[this.value] || 'kcal';
   }
 });
-
+</script>
 {% endblock %}

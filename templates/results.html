@@ -350,6 +350,28 @@
       </div>
     </div>
 
+
+    <!-- Grocery List -->
+    {% if plan_data and plan_data.grocery_list %}
+    <div class="results-card mb-4">
+      <h5 class="card-section-title"><i class="bi bi-cart3 me-2"></i>Weekly Grocery List
+        <div style="float:right;display:flex;gap:8px;">
+          <button onclick="exportGrocery('clipboard')" class="btn btn-sm btn-outline-secondary"><i class="bi bi-clipboard me-1"></i>Copy</button>
+          <button onclick="exportGrocery('whatsapp')" class="btn btn-sm" style="background:#25D366;color:#fff;border:none;border-radius:8px;font-size:0.8rem;padding:4px 12px;"><i class="bi bi-whatsapp me-1"></i>WhatsApp</button>
+        </div>
+      </h5>
+      <div class="row g-2 mt-1">
+        {% for item in plan_data.grocery_list %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="grocery-item" style="background:#f0fdf4;border-radius:10px;padding:8px 12px;font-size:0.82rem;color:#166534;display:flex;align-items:center;gap:8px;">
+            <i class="bi bi-check2-circle"></i>{{ item }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Source Attribution -->
     <div class="source-attribution">
       <i class="bi bi-info-circle me-2"></i>
@@ -409,9 +431,7 @@ if (macroCtx) {
     }
   });
 }
-</script>
 
-// Share Plan
 function sharePlan() {
   const url = window.location.href;
   const title = "My 7-Day NutriAI Diet Plan";
@@ -431,8 +451,9 @@ function sharePlan() {
 async function swapMeal(day, mealType, btn) {
   const card = btn.closest('.meal-card');
   const original = card.innerHTML;
+  // Capture meal name BEFORE overwriting innerHTML with spinner
+  const currentMealName = card.querySelector('.meal-name')?.textContent || '';
   card.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8"><div style="font-size:1.8rem;margin-bottom:8px;">🔄</div><div style="font-size:0.85rem;">Finding alternative...</div></div>';
-  btn.disabled = true;
   try {
     const res = await fetch('/api/swap-meal', {
       method: 'POST',
@@ -440,7 +461,7 @@ async function swapMeal(day, mealType, btn) {
       body: JSON.stringify({
         day, meal_type: mealType,
         current_meal: {
-          meal: card.querySelector('.meal-name')?.textContent || '',
+          meal: currentMealName,
           calories: parseInt(btn.dataset.cal)||0,
           protein: parseFloat(btn.dataset.p)||0,
           carbs: parseFloat(btn.dataset.c)||0,
@@ -452,9 +473,11 @@ async function swapMeal(day, mealType, btn) {
     const data = await res.json();
     if (data.success) {
       const m = data.meal;
+      const mealIcons = {breakfast:'🌅',lunch:'☀️',dinner:'🌙',snacks:'🍎'};
+      const mealIcon = mealIcons[mealType] || '🍽️';
       card.innerHTML = `
         <div class="meal-card-header">
-          <span class="meal-icon">${{breakfast:'🌅',lunch:'☀️',dinner:'🌙',snacks:'🍎'}[mealType]||'🍽️'}</span>
+          <span class="meal-icon">${mealIcon}</span>
           <span class="meal-type">${mealType.charAt(0).toUpperCase()+mealType.slice(1)}</span>
           <span class="meal-calories">${m.calories} kcal</span>
         </div>
@@ -473,6 +496,7 @@ async function swapMeal(day, mealType, btn) {
             <i class="bi bi-arrow-repeat me-1"></i>Swap Again
           </button>
         </div>`;
+
     } else {
       card.innerHTML = original;
     }
@@ -481,168 +505,7 @@ async function swapMeal(day, mealType, btn) {
   }
 }
 
-// ── FOOD IMAGE SCAN ───────────────────────────────────────────────────────
-function handleDrop(e) {
-  e.preventDefault();
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) analyzeImageFile(file);
-}
 
-function analyzeImage(input) {
-  if (input.files[0]) analyzeImageFile(input.files[0]);
-}
-
-async function analyzeImageFile(file) {
-  const zone = document.getElementById('scanZone');
-  const placeholder = document.getElementById('scanPlaceholder');
-  const result = document.getElementById('scanResult');
-  
-  placeholder.style.display = 'none';
-  result.style.display = 'block';
-  result.innerHTML = '<div style="text-align:center;padding:20px;"><div style="font-size:1.5rem">🔍</div><div style="font-size:0.82rem;color:#64748b;margin-top:6px;">Analysing your meal...</div></div>';
-
-  // Preview
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const base64 = e.target.result;
-    try {
-      const res = await fetch('/api/analyze-food-image', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ image: base64, mime_type: file.type, user_id: {{ user.id }} })
-      });
-      const data = await res.json();
-      if (data.error) {
-        result.innerHTML = `<div style="color:#ef4444;font-size:0.82rem;padding:10px;">${data.error}</div>`;
-        return;
-      }
-      const t = data.total || {};
-      result.innerHTML = `
-        <img src="${base64}" style="width:100%;border-radius:10px;margin-bottom:10px;max-height:140px;object-fit:cover;">
-        <div style="font-size:0.78rem;font-weight:700;color:#334155;margin-bottom:6px;">${data.health_rating==='excellent'?'✅':data.health_rating==='good'?'👍':'⚠️'} ${data.health_notes||'Nutrition estimated'}</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <span style="background:#f0fdf4;color:#166534;font-size:0.72rem;padding:2px 8px;border-radius:100px;font-weight:700;">${Math.round(t.calories||0)} kcal</span>
-          <span style="background:#dcfce7;color:#166534;font-size:0.72rem;padding:2px 8px;border-radius:100px;">P:${Math.round(t.protein||0)}g</span>
-          <span style="background:#fef9c3;color:#713f12;font-size:0.72rem;padding:2px 8px;border-radius:100px;">C:${Math.round(t.carbs||0)}g</span>
-          <span style="background:#fee2e2;color:#991b1b;font-size:0.72rem;padding:2px 8px;border-radius:100px;">F:${Math.round(t.fats||0)}g</span>
-        </div>
-        <button onclick="logScannedMeal(${JSON.stringify(data).replace(/"/g,'&quot;')})" 
-                style="width:100%;margin-top:10px;background:#16a34a;color:#fff;border:none;border-radius:100px;padding:8px;font-size:0.82rem;font-weight:700;cursor:pointer;">
-          <i class="bi bi-plus-circle me-1"></i>Log to Diary
-        </button>`;
-    } catch(err) {
-      result.innerHTML = '<div style="color:#ef4444;font-size:0.82rem;padding:10px;">Analysis failed. Please try again.</div>';
-    }
-  };
-  reader.readAsDataURL(file);
-}
-
-function logScannedMeal(data) {
-  const t = data.total || {};
-  const mealType = data.meal_type_guess || 'snack';
-  const foods = (data.identified_foods||[]).map(f=>f.name).join(' + ') || 'Scanned meal';
-  fetch('/api/diary/add', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ user_id: {{ user.id }}, food_name: foods, meal_type: mealType,
-                           calories: Math.round(t.calories||0), protein: Math.round(t.protein||0),
-                           carbs: Math.round(t.carbs||0), fats: Math.round(t.fats||0), notes:'📸 Photo scan' })
-  }).then(r=>r.json()).then(d=>{
-    if(d.success) alert(`✅ "${foods}" logged to your diary!`);
-  });
-}
-
-// ── VOICE INPUT ───────────────────────────────────────────────────────────
-let recognition = null;
-let recording = false;
-
-function toggleVoice() {
-  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    alert('Voice input is not supported in your browser. Please use Chrome.');
-    return;
-  }
-  if (recording) {
-    recognition?.stop();
-    return;
-  }
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SpeechRec();
-  recognition.lang = 'en-IN';
-  recognition.interimResults = true;
-  recognition.continuous = false;
-
-  const btn = document.getElementById('voiceBtn');
-  const status = document.getElementById('voiceStatus');
-  const transcript = document.getElementById('voiceTranscript');
-  const micIcon = document.getElementById('micIcon');
-
-  recognition.onstart = () => {
-    recording = true;
-    btn.innerHTML = '<i class="bi bi-stop-fill me-2"></i>Stop Recording';
-    btn.style.background = '#ef4444';
-    status.textContent = '🔴 Listening...';
-    micIcon.textContent = '🎙️';
-  };
-
-  recognition.onresult = (e) => {
-    const text = Array.from(e.results).map(r=>r[0].transcript).join('');
-    transcript.textContent = '"' + text + '"';
-  };
-
-  recognition.onend = async () => {
-    recording = false;
-    btn.innerHTML = '<i class="bi bi-mic-fill me-2"></i>Start Recording';
-    btn.style.background = '';
-    status.textContent = 'Processing...';
-    micIcon.textContent = '🤖';
-    const text = transcript.textContent.replace(/^"|"$/g,'');
-    if (text.length > 3) await processVoiceLog(text);
-    else { status.textContent = 'Tap to record'; micIcon.textContent = '🎤'; }
-  };
-
-  recognition.start();
-}
-
-async function processVoiceLog(text) {
-  try {
-    const res = await fetch('/api/voice-log', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ transcript: text, user_id: {{ user.id }} })
-    });
-    const data = await res.json();
-    const t = data.total || {};
-    document.getElementById('voiceStatus').textContent = '✅ Logged!';
-    document.getElementById('micIcon').textContent = '✅';
-    document.getElementById('voiceResult').style.display = 'block';
-    document.getElementById('voiceResult').innerHTML = `
-      <div style="background:#f0fdf4;border-radius:10px;padding:10px 12px;font-size:0.82rem;">
-        <strong>${data.cleaned_description || text}</strong><br>
-        <span style="color:#16a34a;">${Math.round(t.calories||0)} kcal · P:${Math.round(t.protein||0)}g · C:${Math.round(t.carbs||0)}g · F:${Math.round(t.fats||0)}g</span>
-        <button onclick="logVoiceMeal(${JSON.stringify(data).replace(/"/g,'&quot;')})"
-                style="display:block;width:100%;margin-top:8px;background:#16a34a;color:#fff;border:none;border-radius:100px;padding:7px;font-size:0.8rem;font-weight:700;cursor:pointer;">
-          <i class="bi bi-plus-circle me-1"></i>Confirm & Log
-        </button>
-      </div>`;
-    setTimeout(() => { document.getElementById('micIcon').textContent='🎤'; document.getElementById('voiceStatus').textContent='Tap to record'; }, 3000);
-  } catch(e) {
-    document.getElementById('voiceStatus').textContent = 'Failed — try again';
-    document.getElementById('micIcon').textContent = '🎤';
-  }
-}
-
-function logVoiceMeal(data) {
-  const t = data.total || {};
-  const foods = (data.identified_foods||[]).map(f=>f.name).join(' + ') || data.cleaned_description || 'Voice meal';
-  fetch('/api/diary/add', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ user_id: {{ user.id }}, food_name: foods,
-                           meal_type: data.meal_type_guess||'snack',
-                           calories: Math.round(t.calories||0), protein: Math.round(t.protein||0),
-                           carbs: Math.round(t.carbs||0), fats: Math.round(t.fats||0), notes:'🎤 Voice log' })
-  }).then(r=>r.json()).then(d=>{ if(d.success) alert(`✅ "${foods}" logged to diary!`); });
-}
 
 // ── GROCERY EXPORT ────────────────────────────────────────────────────────
 function exportGrocery(method) {
@@ -654,13 +517,5 @@ function exportGrocery(method) {
     navigator.clipboard.writeText(text).then(() => alert('✅ Grocery list copied to clipboard!'));
   }
 }
-
-// Share plan
-function sharePlan() {
-  const url = window.location.href;
-  if (navigator.share) navigator.share({ title: 'My NutriAI 7-Day Diet Plan', url }).catch(()=>{});
-  else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => alert('Plan link copied!'));
-  else prompt('Copy this link:', url);
-}
-
+</script>
 {% endblock %}

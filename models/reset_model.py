@@ -1,21 +1,21 @@
 """Password reset tokens stored in DB."""
 import secrets
 from datetime import datetime, timedelta
-from db import get_db, fetchone, execute, q, PG
+from db import get_db, fetchone, execute, q, PG, serial
 
 
 def create_reset_token_table():
     conn = get_db()
     try:
-        conn.cursor().execute(q('''
+        conn.cursor().execute(q(serial("""
             CREATE TABLE IF NOT EXISTS password_resets (
-                id INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT NOT NULL,
                 token TEXT UNIQUE NOT NULL,
                 expires_at TEXT NOT NULL,
                 used INTEGER DEFAULT 0
             )
-        '''.replace('INTEGER PRIMARY KEY', 'SERIAL PRIMARY KEY' if PG else 'INTEGER PRIMARY KEY AUTOINCREMENT')))
+        """)))
         conn.commit()
     finally:
         conn.close()
