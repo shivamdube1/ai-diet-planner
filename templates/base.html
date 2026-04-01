@@ -86,8 +86,8 @@
 <!-- Navigation -->
 <nav class="navbar navbar-expand-lg navbar-custom">
   <div class="container">
-    <a class="navbar-brand" href="{{ url_for('index') }}">
-      <span class="brand-icon">🥗</span>
+    <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+      <img src="{{ url_for('static', filename='icon-192.png') }}" alt="NutriAI Logo" class="brand-logo me-2" style="width: 32px; height: 32px; object-fit: contain; aspect-ratio: 1/1; border-radius: 8px;">
       <span class="brand-name">NutriAI</span>
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -140,7 +140,10 @@
   <div class="container">
     <div class="row">
       <div class="col-md-4 mb-4">
-        <div class="footer-brand"><span class="brand-icon">🥗</span><span class="brand-name">NutriAI</span></div>
+        <div class="footer-brand d-flex align-items-center">
+          <img src="{{ url_for('static', filename='icon-192.png') }}" alt="NutriAI Logo" class="brand-logo me-2" style="width: 32px; height: 32px; object-fit: contain; aspect-ratio: 1/1; border-radius: 8px;">
+          <span class="brand-name">NutriAI</span>
+        </div>
         <p class="footer-desc mt-2">AI-powered personalised nutrition and lifestyle planning — based on Harvard Healthy Eating Plate & UK Eatwell Guide.</p>
       </div>
       <div class="col-md-4 mb-4">
@@ -164,7 +167,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2025 NutriAI. Built with 💚 for healthier living · <a href="/robots.txt" style="color:#94a3b8;font-size:0.75rem;">robots.txt</a></p>
+      <p>© 2025 NutriAI. Built with 💚 for healthier living by <strong>Shivam Suraj Dube</strong> · <a href="/robots.txt" style="color:#94a3b8;font-size:0.75rem;">robots.txt</a></p>
     </div>
   </div>
 </footer>
