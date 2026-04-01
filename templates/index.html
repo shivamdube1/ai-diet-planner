@@ -6,27 +6,25 @@
 
 <!-- Hero Section -->
 <section class="hero-section position-relative overflow-hidden">
-  <!-- Three.js Canvas -->
-  <canvas id="hero-3d-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;"></canvas>
-  
-  <div class="hero-bg-decor d-none"></div>
+  <div class="hero-bg-decor anim-pulse"></div>
   <div class="container position-relative z-index-2">
-    <div class="row align-items-center min-vh-screen justify-content-center">
-      <div class="col-12 col-lg-8 text-center glass-hero-card p-4 p-md-5 rounded-4">
-        <div class="hero-badge mx-auto"><i class="bi bi-stars"></i> Harvard Plate + Eatwell Guide Science</div>
+    <div class="row align-items-center min-vh-screen py-5">
+      <!-- Left Content -->
+      <div class="col-12 col-lg-6 text-center text-lg-start mb-5 mb-lg-0 hero-text-col">
+        <div class="hero-badge mx-auto mx-lg-0"><i class="bi bi-stars"></i> Harvard Plate + Eatwell Science</div>
         <h1 class="hero-title">
           <span class="d-inline-block">Your AI Personal</span><br>
           <span class="text-accent d-inline-block">Nutritionist</span>
         </h1>
-        <p class="hero-subtitle mx-auto">
+        <p class="hero-subtitle mx-auto mx-lg-0">
           Answer 13 health questions. Get a science-backed 7-day meal plan with exact portions, macros, grocery list, and lifestyle tips — tailored to your body, goals, and medical conditions.
         </p>
-        <div class="hero-actions justify-content-center flex-column flex-sm-row align-items-center">
+        <div class="hero-actions justify-content-center justify-content-lg-start flex-column flex-sm-row align-items-center">
           <a href="{{ url_for('questionnaire') }}" class="btn btn-primary-custom btn-lg btn-liquid" id="generate-plan-btn">
             <span class="btn-text" style="position:relative; z-index:2;"><i class="bi bi-lightning-charge-fill me-2"></i>Start Free Health Analysis</span>
             <div class="liquid-bg"></div>
           </a>
-          <div class="hero-stats mt-3 mt-sm-0 ms-sm-4 justify-content-center">
+          <div class="hero-stats mt-3 mt-sm-0 ms-sm-4 justify-content-center justify-content-lg-start">
             <div class="stat">
               <span class="stat-num">50+</span>
               <span class="stat-label">Health Factors</span>
@@ -39,161 +37,56 @@
           </div>
         </div>
         <!-- Trust badges -->
-        <div class="trust-row mt-4 justify-content-center">
+        <div class="trust-row mt-4 justify-content-center justify-content-lg-start">
           <span class="trust-badge"><i class="bi bi-check-circle-fill text-success me-1"></i>No credit card</span>
           <span class="trust-badge"><i class="bi bi-check-circle-fill text-success me-1"></i>Veg/Vegan safe</span>
           <span class="trust-badge"><i class="bi bi-check-circle-fill text-success me-1"></i>Indian foods</span>
+        </div>
+      </div>
+      
+      <!-- Right Graphic: 3D UI Cards -->
+      <div class="col-12 col-lg-6 hero-graphic-col">
+        <div class="cards-3d-scene">
+          <div class="card-3d card-main-meal float-anim-1 glass-panel">
+            <div class="card-header-mini">
+              <div class="badge-tag">Lunch</div>
+              <span class="time"><i class="bi bi-clock"></i> 1:30 PM</span>
+            </div>
+            <h5 class="meal-name">Paneer Quinoa Bowl</h5>
+            <div class="macro-bars">
+              <div class="m-bar"><span class="label">P</span><div class="track"><div class="fill fill-p" style="width:70%"></div></div><span class="val">24g</span></div>
+              <div class="m-bar"><span class="label">C</span><div class="track"><div class="fill fill-c" style="width:40%"></div></div><span class="val">45g</span></div>
+              <div class="m-bar"><span class="label">F</span><div class="track"><div class="fill fill-f" style="width:30%"></div></div><span class="val">18g</span></div>
+            </div>
+          </div>
+          
+          <div class="card-3d card-sub-macro float-anim-2 glass-panel">
+            <div class="macro-ring-container">
+              <div class="macro-val">1850<br><small>kcal</small></div>
+              <svg viewBox="0 0 36 36" class="circular-chart">
+                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="circle" stroke-dasharray="80, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+            </div>
+            <div class="text-end ms-3">
+              <h6>Daily Target</h6>
+              <span>Optimal deficit</span>
+            </div>
+          </div>
+          
+          <div class="card-3d card-sub-tip float-anim-3 glass-panel">
+            <div class="icon-box"><i class="bi bi-heart-pulse-fill"></i></div>
+            <div class="tip-content">
+              <h6>PCOS Friendly</h6>
+              <p>Low GI index applied</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-{% block scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const canvas = document.getElementById('hero-3d-canvas');
-    if (!canvas) return;
-
-    // SCENE, CAMERA, RENDERER
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0xf8fafc, 0.002);
-
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 25;
-
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, canvas.parentElement.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    // LIGHTS
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(10, 20, 10);
-    scene.add(directionalLight);
-
-    const pointLight = new THREE.PointLight(0x2ecc71, 1, 50);
-    pointLight.position.set(-10, 0, 10);
-    scene.add(pointLight);
-
-    const pointLight2 = new THREE.PointLight(0xf1c40f, 1, 50);
-    pointLight2.position.set(10, 10, 10);
-    scene.add(pointLight2);
-
-    // MATERIALS (Glassmorphism / Premium Apple Style)
-    const emeraldParams = {
-        color: 0x2ecc71,
-        metalness: 0.1,
-        roughness: 0.2,
-        transmission: 0.8, // glass-like
-        ior: 1.5,
-        thickness: 0.5
-    };
-    const yellowParams = {
-        color: 0xf1c40f,
-        metalness: 0.1,
-        roughness: 0.2,
-        transmission: 0.6,
-        ior: 1.5,
-        thickness: 0.5
-    };
-    const emeraldMat = new THREE.MeshPhysicalMaterial(emeraldParams);
-    const yellowMat = new THREE.MeshPhysicalMaterial(yellowParams);
-    
-    // FALLBACK for older devices
-    const simpleEmerald = new THREE.MeshStandardMaterial({color: 0x2ecc71, metalness: 0.3, roughness: 0.4});
-    const simpleYellow = new THREE.MeshStandardMaterial({color: 0xf1c40f, metalness: 0.3, roughness: 0.4});
-
-    const isMobile = window.innerWidth < 768;
-    const mat1 = isMobile ? simpleEmerald : emeraldMat;
-    const mat2 = isMobile ? simpleYellow : yellowMat;
-
-    // GEOMETRIES
-    const nodes = [];
-    const geometries = [
-        new THREE.TorusGeometry(2, 0.8, 32, 64),
-        new THREE.SphereGeometry(2.5, 64, 64),
-        new THREE.IcosahedronGeometry(2.5, 0),
-        new THREE.OctahedronGeometry(2.5, 2)
-    ];
-
-    const generateNode = (geo, mat, x, y, z) => {
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(x, y, z);
-        mesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
-        // Add random floating logic
-        mesh.userData = {
-            rx: (Math.random() - 0.5) * 0.02,
-            ry: (Math.random() - 0.5) * 0.02,
-            floatSpeed: 0.01 + Math.random() * 0.02,
-            baseY: y,
-            timeOffset: Math.random() * Math.PI * 2
-        };
-        scene.add(mesh);
-        nodes.push(mesh);
-    };
-
-    // Desktop gets more nodes, mobile fewer for performance
-    const count = isMobile ? 5 : 8;
-    for (let i = 0; i < count; i++) {
-        const mat = i % 2 === 0 ? mat1 : mat2;
-        const geo = geometries[Math.floor(Math.random() * geometries.length)];
-        const x = (Math.random() - 0.5) * (isMobile ? 20 : 40);
-        const y = (Math.random() - 0.5) * 20;
-        const z = (Math.random() - 0.5) * 10 - 5;
-        // Don't place them exactly behind the text block
-        if (Math.abs(x) < 5 && Math.abs(y) < 5) x += (x < 0 ? -10 : 10);
-        generateNode(geo, mat, x, y, z);
-    }
-
-    // MOUSE PARALLAX
-    let mouseX = 0;
-    let mouseY = 0;
-    let targetX = 0;
-    let targetY = 0;
-
-    document.addEventListener('mousemove', (e) => {
-        mouseX = (e.clientX - window.innerWidth / 2) * 0.005;
-        mouseY = (e.clientY - window.innerHeight / 2) * 0.005;
-    });
-
-    // RENDER LOOP
-    const clock = new THREE.Clock();
-
-    function animate() {
-        requestAnimationFrame(animate);
-        const time = clock.getElapsedTime();
-
-        // Ease camera position
-        targetX = mouseX * 2;
-        targetY = mouseY * 2;
-        camera.position.x += (targetX - camera.position.x) * 0.05;
-        camera.position.y += (-targetY - camera.position.y) * 0.05;
-        camera.lookAt(scene.position);
-
-        // Animate nodes
-        nodes.forEach(node => {
-            node.rotation.x += node.userData.rx;
-            node.rotation.y += node.userData.ry;
-            node.position.y = node.userData.baseY + Math.sin(time + node.userData.timeOffset) * 2;
-        });
-
-        renderer.render(scene, camera);
-    }
-    animate();
-
-    // RESIZE
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / canvas.parentElement.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, canvas.parentElement.clientHeight);
-    });
-  });
-</script>
-{% endblock %}
 
 <!-- Live Stats Banner -->
 {% if stats and stats.total_plans > 0 %}

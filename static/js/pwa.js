@@ -63,7 +63,9 @@
           deferredInstallPrompt.prompt();
           const { outcome } = await deferredInstallPrompt.userChoice;
           console.log('[PWA] Nav install outcome:', outcome);
-          if (outcome === 'dismissed') {
+          if (outcome === 'accepted') {
+            showInstallationProgress();
+          } else if (outcome === 'dismissed') {
             navItem.classList.remove('d-none');
           }
         } catch (err) {
@@ -120,6 +122,7 @@
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
     hideInstallBanner();
+    hideInstallationProgress(); // clear the fake progress bar overlay
     const navItem = document.getElementById('nav-install-item');
     if (navItem) navItem.classList.add('d-none');
     localStorage.setItem('pwa-installed', 'true');
@@ -163,6 +166,9 @@
       deferredInstallPrompt.prompt();
       const { outcome } = await deferredInstallPrompt.userChoice;
       console.log('[PWA] Install prompt outcome:', outcome);
+      if (outcome === 'accepted') {
+        showInstallationProgress();
+      }
       deferredInstallPrompt = null;
     });
 
@@ -179,6 +185,69 @@
       setTimeout(() => banner.remove(), 400);
     }
   }
+
+  // ==== NEW: Simulated Installation Progress UI ====
+  let installProgressInterval = null;
+  function showInstallationProgress() {
+    if (document.getElementById('pwa-install-progress-overlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'pwa-install-progress-overlay';
+    overlay.innerHTML = `
+      <div class="install-progress-box">
+        <h3 id="install-title">Minting your App Space...</h3>
+        <p id="install-subtitle">This might take a moment.</p>
+        <div class="install-bar-track">
+          <div class="install-bar-fill" id="install-fill"></div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // animate in
+    requestAnimationFrame(() => overlay.style.opacity = '1');
+
+    const fill = document.getElementById('install-fill');
+    const title = document.getElementById('install-title');
+    const subtitle = document.getElementById('install-subtitle');
+    let percent = 0;
+
+    installProgressInterval = setInterval(() => {
+      percent += Math.random() * 3 + 1; // 1-4% at a time
+      if (percent > 99) percent = 99; // hang at 99% until real appinstalled event
+      
+      fill.style.width = percent + '%';
+      
+      if (percent > 20 && percent < 60) {
+        title.innerText = 'Downloading assets...';
+      } else if (percent >= 60 && percent < 90) {
+        title.innerText = 'Optimizing for offline use...';
+      } else if (percent >= 90) {
+        title.innerText = 'Finalizing installation...';
+        subtitle.innerText = 'Almost ready! Waiting for verification...';
+      }
+    }, 400); // update every 400ms
+  }
+
+  function hideInstallationProgress() {
+    const overlay = document.getElementById('pwa-install-progress-overlay');
+    if (overlay) {
+      clearInterval(installProgressInterval);
+      
+      const fill = document.getElementById('install-fill');
+      const title = document.getElementById('install-title');
+      const subtitle = document.getElementById('install-subtitle');
+      if (fill) fill.style.width = '100%';
+      if (title) title.innerText = 'Successfully Installed! ✓';
+      if (subtitle) subtitle.innerText = 'You can now launch the app from your home screen.';
+
+      setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 600);
+      }, 1500);
+    }
+  }
+
 
   // ── 3. Update Available Banner ───────────────────────────────
   function showUpdateBanner(newWorker) {
@@ -419,6 +488,35 @@
     @media (max-width: 480px) {
       .pwa-banner-text span { display: none; }
       .pwa-btn-install { padding: 8px 12px; }
+    }
+
+    /* ── Progress Overlay ── */
+    #pwa-install-progress-overlay {
+      position: fixed; inset: 0; z-index: 10005;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.4s ease;
+    }
+    .install-progress-box {
+      background: #1e293b; border: 1px solid #334155;
+      padding: 30px; border-radius: 16px; width: 90%; max-width: 400px;
+      text-align: center; color: #fff;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .install-progress-box h3 {
+      font-family: 'Playfair Display', serif; font-size: 1.3rem; margin: 0 0 8px; color: #f8fafc;
+    }
+    .install-progress-box p {
+      font-size: 0.9rem; color: #94a3b8; margin: 0 0 24px;
+    }
+    .install-bar-track {
+      width: 100%; height: 8px; background: rgba(0,0,0,0.3);
+      border-radius: 10px; overflow: hidden;
+    }
+    .install-bar-fill {
+      height: 100%; width: 0%; background: linear-gradient(90deg, #22c55e, #4ade80);
+      transition: width 0.4s ease; border-radius: 10px;
     }
   `;
   document.head.appendChild(style);
