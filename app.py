@@ -1,3 +1,5 @@
+
+
 import os, uuid, json, secrets
 from functools import wraps
 from datetime import date
@@ -56,6 +58,28 @@ def admin_required(f):
     return d
 
 
+# ── Service Worker header hook (allows /static/sw.js to control full scope) ──
+@app.after_request
+def add_sw_header(response):
+    """Add Service-Worker-Allowed header so sw.js can claim root scope."""
+    if '/sw.js' in request.path:
+        response.headers['Service-Worker-Allowed'] = '/'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+
+# ── Serve sw.js from root (avoids scope restriction) ─────────────────────────
+@app.route('/sw.js')
+def service_worker():
+    """Serve the service worker from root so it can control all pages."""
+    from flask import send_from_directory
+    resp = send_from_directory('static', 'sw.js')
+    resp.headers['Service-Worker-Allowed'] = '/'
+    resp.headers['Content-Type'] = 'application/javascript'
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return resp
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  SEO / UTILITY
 # ══════════════════════════════════════════════════════════════════════════════
@@ -72,8 +96,10 @@ def sitemap():
     urls = ''.join(f"""
   <url><loc>{base}{p}</loc><changefreq>weekly</changefreq>
   <priority>{'1.0' if p=='/' else '0.8'}</priority></url>""" for p in pages)
-    return Response(f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>',
-                    mimetype='application/xml')
+    xml = (f'<?xml version="1.0" encoding="UTF-8"?>'
+           f'<?xml-stylesheet type="text/xsl" href="/static/sitemap.xsl"?>'
+           f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>')
+    return Response(xml, mimetype='application/xml')
 
 @app.route('/ping')
 def ping():
@@ -81,11 +107,52 @@ def ping():
 
 @app.route('/manifest.json')
 def manifest():
-    return jsonify({"name":"NutriAI — AI Diet Planner","short_name":"NutriAI",
-        "description":"AI-powered personalised diet plans","start_url":"/",
-        "display":"standalone","background_color":"#0f172a","theme_color":"#16a34a",
-        "icons":[{"src":"/static/icon-192.png","sizes":"192x192","type":"image/png"},
-                 {"src":"/static/icon-512.png","sizes":"512x512","type":"image/png"}]})
+    data = {
+        "name": "NutriAI — AI Diet Planner",
+        "short_name": "NutriAI",
+        "description": "AI-powered personalised diet plans based on Harvard Healthy Eating Plate. Get your free 7-day meal plan in 60 seconds.",
+        "start_url": "/",
+        "scope": "/",
+        "display": "standalone",
+        "orientation": "portrait-primary",
+        "background_color": "#0f172a",
+        "theme_color": "#16a34a",
+        "lang": "en-IN",
+        "categories": ["health", "food", "lifestyle"],
+        "icons": [
+            {"src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+            {"src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+        ],
+        "shortcuts": [
+            {
+                "name": "Get My Diet Plan",
+                "short_name": "Diet Plan",
+                "description": "Start your health analysis now",
+                "url": "/questionnaire",
+                "icons": [{"src": "/static/icon-192.png", "sizes": "192x192"}]
+            },
+            {
+                "name": "My Dashboard",
+                "short_name": "Dashboard",
+                "description": "View your saved plans",
+                "url": "/my-dashboard",
+                "icons": [{"src": "/static/icon-192.png", "sizes": "192x192"}]
+            }
+        ],
+        "screenshots": [
+            {"src": "/static/og-image.png", "sizes": "1200x630", "type": "image/png", "form_factor": "wide", "label": "NutriAI Dashboard"}
+        ]
+    }
+    resp = make_response(jsonify(data))
+    resp.headers['Content-Type'] = 'application/manifest+json'
+    resp.headers['Cache-Control'] = 'public, max-age=86400'
+    return resp
+
+
+@app.route('/offline')
+def offline_page():
+    """Offline fallback page served by the service worker."""
+    return render_template('offline.html')
 
 
 # ══════════════════════════════════════════════════════════════════════════════
