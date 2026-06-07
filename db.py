@@ -2,7 +2,7 @@
 Universal DB adapter — PostgreSQL on Render, SQLite locally.
 All models import get_db / execute / fetchone / fetchall / commit from here.
 """
-import os, sqlite3
+import os, sqlite3, time
 from config import Config
 
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
@@ -13,10 +13,22 @@ if USE_PG:
     # Render gives postgres:// but psycopg2 needs postgresql://
     _pg_dsn = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 
-def get_db():
+def get_db(retries=3, delay=2):
     if USE_PG:
-        conn = psycopg2.connect(_pg_dsn, cursor_factory=psycopg2.extras.RealDictCursor)
-        return conn
+        for attempt in range(1, retries + 1):
+            try:
+                conn = psycopg2.connect(
+                    _pg_dsn,
+                    cursor_factory=psycopg2.extras.RealDictCursor,
+                    connect_timeout=5,
+                )
+                return conn
+            except psycopg2.OperationalError as e:
+                if attempt == retries:
+                    raise
+                print(f"[DB] Connection attempt {attempt}/{retries} failed: {e}. Retrying in {delay}s...")
+                time.sleep(delay)
+                delay *= 2  # exponential backoff
     else:
         conn = sqlite3.connect(Config.DATABASE_PATH)
         conn.row_factory = sqlite3.Row

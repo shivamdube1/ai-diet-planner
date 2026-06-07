@@ -33,10 +33,13 @@ app.config.from_object(Config)
 app.secret_key = Config.SECRET_KEY
 
 os.makedirs('database', exist_ok=True)
-create_tables()
-add_extended_columns()
-create_accounts_table()
-create_reset_token_table()
+try:
+    create_tables()
+    add_extended_columns()
+    create_accounts_table()
+    create_reset_token_table()
+except Exception as e:
+    app.logger.warning(f"⚠️  Database initialization failed (will retry on first request): {e}")
 
 
 # ── Decorators ────────────────────────────────────────────────────────────────
