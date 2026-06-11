@@ -7,17 +7,17 @@
      • Admin routes                  → Network-Only
    ============================================================ */
 
-const CACHE_VERSION = 'nutriai-v7';
+const CACHE_VERSION = 'nutriai-v8';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const PAGES_CACHE   = `${CACHE_VERSION}-pages`;
-const OLD_CACHES    = ['nutriai-v1', 'nutriai-v2', 'nutriai-v3', 'nutriai-v4', 'nutriai-v5', 'nutriai-v6', 'nutriai-v1-static', 'nutriai-v2-static', 'nutriai-v3-static', 'nutriai-v4-static', 'nutriai-v5-static', 'nutriai-v6-static', 'nutriai-v3-pages', 'nutriai-v4-pages', 'nutriai-v5-pages', 'nutriai-v6-pages'];
+const OLD_CACHES    = ['nutriai-v1', 'nutriai-v2', 'nutriai-v3', 'nutriai-v4', 'nutriai-v5', 'nutriai-v6', 'nutriai-v7', 'nutriai-v1-static', 'nutriai-v2-static', 'nutriai-v3-static', 'nutriai-v4-static', 'nutriai-v5-static', 'nutriai-v6-static', 'nutriai-v7-static', 'nutriai-v3-pages', 'nutriai-v4-pages', 'nutriai-v5-pages', 'nutriai-v6-pages', 'nutriai-v7-pages'];
 
 // Assets to pre-cache on install
 const PRECACHE_ASSETS = [
   '/',
   '/offline',
   '/manifest.json',
-  '/static/css/style.css?v=3',
+  '/static/css/style.css?v=4',
   '/static/js/script.js',
   '/static/js/pwa.js?v=2',
   '/static/icon-192.png',
