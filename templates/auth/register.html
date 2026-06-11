@@ -8,7 +8,7 @@
     <!-- Left Panel -->
     <div class="auth-left">
       <div class="auth-left-content">
-        <div class="auth-logo-mark">🥗</div>
+        <div class="auth-logo-mark"><img src="{{ url_for('static', filename='icon-192.png') }}" alt="NutriAI" style="width:48px;height:48px;border-radius:12px;"></div>
         <h2 class="auth-left-title">Start Your Health Journey</h2>
         <p class="auth-left-sub">Join NutriAI and get a personalized AI diet plan based on your unique body, lifestyle, and goals.</p>
         <div class="auth-perks">
@@ -22,6 +22,10 @@
           <div class="quote-text">"Let food be thy medicine and medicine be thy food."</div>
           <div class="quote-author">— Hippocrates</div>
         </div>
+        <img src="{{ url_for('static', filename='images/auth-illustration.png') }}" 
+             alt="NutriAI - Your AI-powered nutrition partner" 
+             class="auth-illustration" 
+             loading="lazy">
       </div>
     </div>
 

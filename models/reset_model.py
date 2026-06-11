@@ -1,6 +1,6 @@
 """Password reset tokens stored in DB."""
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from db import get_db, fetchone, execute, q, PG, serial
 
 
@@ -23,7 +23,7 @@ def create_reset_token_table():
 
 def create_reset_token(email: str) -> str:
     token = secrets.token_urlsafe(32)
-    expires = (datetime.utcnow() + timedelta(hours=1)).isoformat()
+    expires = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
     conn = get_db()
     try:
         # Clear old tokens for this email
@@ -45,7 +45,10 @@ def validate_reset_token(token: str):
         if not row:
             return None
         expires = datetime.fromisoformat(row['expires_at'])
-        if datetime.utcnow() > expires:
+        now = datetime.now(timezone.utc)
+        if expires.tzinfo is None:
+            now = now.replace(tzinfo=None)
+        if now > expires:
             return None
         return row['email']
     finally:

@@ -2,7 +2,7 @@
 
 import os, uuid, json, secrets
 from functools import wraps
-from datetime import date
+from datetime import date, datetime, timezone
 from flask import (Flask, render_template, request, jsonify,
                    session, redirect, url_for, flash, Response, make_response)
 from config import Config
@@ -40,6 +40,11 @@ try:
     create_reset_token_table()
 except Exception as e:
     app.logger.warning(f"⚠️  Database initialization failed (will retry on first request): {e}")
+
+
+@app.context_processor
+def inject_now():
+    return {'now': lambda: datetime.now(timezone.utc)}
 
 
 # ── Decorators ────────────────────────────────────────────────────────────────
@@ -238,6 +243,18 @@ def analyze():
             'smoking':            form.get('smoking','never'),
             'supplements':        form.get('supplements',''),
             'health_motivation':  form.get('health_motivation',''),
+            'exercise_intensity': form.get('exercise_intensity','moderate'),
+            'sleep_issues':       ', '.join(form.getlist('sleep_issues')),
+            'digestive_issues':   ', '.join(form.getlist('digestive_issues')),
+            'bowel_frequency':    form.get('bowel_frequency','once_daily'),
+            'probiotic_intake':   form.get('probiotic_intake','often'),
+            'regular_drinks':     ', '.join(form.getlist('regular_drinks')),
+            'sitting_hours':      int(form.get('sitting_hours',6)),
+            'screen_time':        int(form.get('screen_time',8)),
+            'work_shift':         form.get('work_shift','day'),
+            'meal_skip':          form.get('meal_skip','never'),
+            'stress_eating':      form.get('stress_eating','no_change'),
+            'bedtime':            form.get('bedtime','23:00'),
         }
         metrics = run_all_calculations(user_data)
         user_data['activity_level'] = metrics['activity_level']
@@ -279,17 +296,23 @@ def results(user_id, plan_id):
     lifestyle_tips = json.loads(plan.get('lifestyle_tips','[]'))
     health_analysis = analyze_health(user, plan)
     has_medical = bool(user.get('medical_conditions','').strip())
-    # Load full plan data for grocery list etc.
-    from services.ai_diet_generator import get_fallback_plan
-    from services.diet_calculator import run_all_calculations
-    try:
-        metrics_for_plan = run_all_calculations(user)
-        plan_data = get_fallback_plan(user, metrics_for_plan)
-        # Use stored lifestyle_tips if available
-        if lifestyle_tips:
-            plan_data['lifestyle_tips'] = lifestyle_tips
-    except Exception:
-        plan_data = {}
+    # Build plan_data from stored plan if available, else generate fallback
+    plan_data = {}
+    if week_plan:
+        plan_data = {
+            'week_plan': week_plan,
+            'lifestyle_tips': lifestyle_tips,
+        }
+    if not plan_data.get('week_plan'):
+        from services.ai_diet_generator import get_fallback_plan
+        from services.diet_calculator import run_all_calculations
+        try:
+            metrics_for_plan = run_all_calculations(user)
+            plan_data = get_fallback_plan(user, metrics_for_plan)
+            if lifestyle_tips:
+                plan_data['lifestyle_tips'] = lifestyle_tips
+        except Exception:
+            plan_data = {}
     return render_template('results.html',
         user=user, plan=plan, week_plan=week_plan,
         lifestyle_tips=lifestyle_tips, health_analysis=health_analysis,
@@ -687,8 +710,7 @@ def not_found(e): return render_template('index.html'), 404
 def server_error(e):
     app.logger.error(f'500 error: {e}')
     # If admin route, show error details
-    from flask import request as req
-    if req.path.startswith('/admin'):
+    if request.path.startswith('/admin'):
         return f'<h2>Admin Error (500)</h2><pre>{e}</pre><a href="/admin/dashboard">Retry</a>', 500
     return render_template('index.html'), 500
 

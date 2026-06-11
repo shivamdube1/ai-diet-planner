@@ -14,7 +14,7 @@ def swap_meal(day: str, meal_type: str, current_meal: dict, user_data: dict, pla
     """Generate an alternative meal matching same calories/macros."""
 
     # Cache key
-    cache_key = hashlib.md5(
+    cache_key = hashlib.sha256(
         f"{meal_type}|{current_meal.get('meal','')}|{user_data.get('diet_type')}|{user_data.get('cuisine_preference','Indian')}|{int(current_meal.get('calories',0)//50)*50}".encode()
     ).hexdigest()
 

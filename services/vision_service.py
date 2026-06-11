@@ -132,7 +132,7 @@ def analyze_voice_text(transcript: str, user: Optional[Dict[str, Any]] = None) -
             return {"success": False, "provider": "gemini", "error": str(e)}
 
     # Fallback: naive extraction of likely food tokens.
-    tokens = re.findall(r"[a-zA-Z][a-zA-Z\\-']{2,}", t.lower())
+    tokens = re.findall(r"[a-zA-Z][a-zA-Z\-']{2,}", t.lower())
     stop = {
         "today",
         "yesterday",

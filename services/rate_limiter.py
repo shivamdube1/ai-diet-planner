@@ -6,8 +6,9 @@ import time
 from collections import defaultdict
 from threading import Lock
 
-_store: dict = defaultdict(list)
+_store: defaultdict = defaultdict(list)
 _lock = Lock()
+_MAX_KEYS = 1000  # trigger cleanup when store exceeds this
 
 
 def is_allowed(key: str, max_calls: int = 5, window_seconds: int = 60) -> bool:
@@ -20,6 +21,12 @@ def is_allowed(key: str, max_calls: int = 5, window_seconds: int = 60) -> bool:
             return False
         calls.append(now)
         _store[key] = calls
+        # Periodic cleanup to prevent unbounded memory growth
+        if len(_store) > _MAX_KEYS:
+            expired_keys = [k for k, v in _store.items()
+                           if not v or (now - max(v)) > window_seconds]
+            for k in expired_keys:
+                del _store[k]
         return True
 
 

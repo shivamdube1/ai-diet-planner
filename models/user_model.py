@@ -60,6 +60,18 @@ def create_tables():
                 smoking TEXT,
                 supplements TEXT,
                 health_motivation TEXT,
+                exercise_intensity TEXT,
+                sleep_issues TEXT,
+                digestive_issues TEXT,
+                bowel_frequency TEXT,
+                probiotic_intake TEXT,
+                regular_drinks TEXT,
+                sitting_hours INTEGER,
+                screen_time INTEGER,
+                work_shift TEXT,
+                meal_skip TEXT,
+                stress_eating TEXT,
+                bedtime TEXT,
                 account_id INTEGER,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
@@ -126,6 +138,10 @@ def add_extended_columns():
             ("food_dislikes","TEXT"),("cooking_time","TEXT"),("cooking_skill","TEXT"),
             ("eating_speed","TEXT"),("meal_prep","TEXT"),("alcohol","TEXT"),
             ("smoking","TEXT"),("supplements","TEXT"),("health_motivation","TEXT"),
+            ("exercise_intensity","TEXT"),("sleep_issues","TEXT"),("digestive_issues","TEXT"),
+            ("bowel_frequency","TEXT"),("probiotic_intake","TEXT"),("regular_drinks","TEXT"),
+            ("sitting_hours","INTEGER"),("screen_time","INTEGER"),("work_shift","TEXT"),
+            ("meal_skip","TEXT"),("stress_eating","TEXT"),("bedtime","TEXT"),
             ("account_id","INTEGER"),
         ]
         for col, ctype in new_cols:
@@ -155,10 +171,14 @@ def save_user(data):
                 medical_conditions, medications, health_issues, menstrual_issues,
                 body_fat_pct, cuisine_preference, food_dislikes, cooking_time,
                 cooking_skill, eating_speed, meal_prep, alcohol, smoking,
-                supplements, health_motivation
+                supplements, health_motivation,
+                exercise_intensity, sleep_issues, digestive_issues, bowel_frequency,
+                probiotic_intake, regular_drinks, sitting_hours, screen_time,
+                work_shift, meal_skip, stress_eating, bedtime
             ) VALUES (
                 ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,
-                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,
+                ?,?
             ){returning}
         ''')
         params = (
@@ -179,10 +199,16 @@ def save_user(data):
             data.get('food_dislikes'), data.get('cooking_time'), data.get('cooking_skill'),
             data.get('eating_speed'), data.get('meal_prep'), data.get('alcohol'),
             data.get('smoking'), data.get('supplements'), data.get('health_motivation'),
+            data.get('exercise_intensity'), data.get('sleep_issues'), data.get('digestive_issues'),
+            data.get('bowel_frequency'), data.get('probiotic_intake'), data.get('regular_drinks'),
+            data.get('sitting_hours'), data.get('screen_time'), data.get('work_shift'),
+            data.get('meal_skip'), data.get('stress_eating'), data.get('bedtime'),
         )
         cur = execute(conn, sql, params)
-        row_id = lastrowid(cur, conn) if not PG else (cur.fetchone() or {}).get('id')
-        if row_id is None and not PG:
+        if PG:
+            result = cur.fetchone()
+            row_id = result['id'] if result else None
+        else:
             row_id = cur.lastrowid
         conn.commit()
         return row_id

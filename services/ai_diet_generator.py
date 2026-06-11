@@ -89,10 +89,12 @@ USER PROFILE:
 - Food Allergies: {user_data.get('food_allergies','None')}
 - Foods Disliked: {food_dislikes}
 - Activity Level: {metrics['activity_level'].replace('_',' ').title()}
-- Sleep: {user_data.get('sleep_hours',7)}h ({user_data.get('sleep_quality','average')} quality)
-- Stress: {user_data.get('stress_level','moderate')}
-- Water: {user_data.get('water_intake','2 liters')}/day
-- Work type: {user_data.get('work_type','sedentary')} | Work hours: {user_data.get('work_hours',8)}h
+- Sleep: {user_data.get('sleep_hours',7)}h ({user_data.get('sleep_quality','average')} quality) | Issues: {user_data.get('sleep_issues','None')} | Bedtime: {user_data.get('bedtime','23:00')}
+- Stress: {user_data.get('stress_level','moderate')} | Stress eating: {user_data.get('stress_eating','no_change')}
+- Water: {user_data.get('water_intake','2 liters')}/day | Regular drinks: {user_data.get('regular_drinks','None')}
+- Work type: {user_data.get('work_type','sedentary')} | Shift: {user_data.get('work_shift','day')} | Work hours: {user_data.get('work_hours',8)}h | Sitting hours: {user_data.get('sitting_hours',6)}h | Screen time: {user_data.get('screen_time',8)}h
+- Exercise intensity: {user_data.get('exercise_intensity','moderate')}
+- Digestion/Gut: Issues: {user_data.get('digestive_issues','None')} | Bowel frequency: {user_data.get('bowel_frequency','once_daily')} | Probiotics: {user_data.get('probiotic_intake','often')}
 - Medical: {medical if medical else 'None reported'}
 - Medications: {user_data.get('medications','None')}
 - Supplements: {supplements}
@@ -101,6 +103,7 @@ USER PROFILE:
 - Eating speed: {user_data.get('eating_speed','normal')}
 - Alcohol: {user_data.get('alcohol','never')} | Smoking: {user_data.get('smoking','never')}
 - Motivation: {user_data.get('health_motivation','')}
+- Meal skip habits: {user_data.get('meal_skip','never')}
 
 CURRENT EATING HABITS (to improve upon):
 - Breakfast: {user_data.get('breakfast_foods','Not specified')}

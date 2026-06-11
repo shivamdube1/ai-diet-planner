@@ -20,7 +20,7 @@
           Answer 13 health questions. Get a science-backed 7-day meal plan with exact portions, macros, grocery list, and lifestyle tips — tailored to your body, goals, and medical conditions.
         </p>
         <div class="hero-actions justify-content-center justify-content-lg-start flex-column flex-sm-row align-items-center">
-          <a href="{{ url_for('questionnaire') }}" class="btn btn-primary-custom btn-lg btn-liquid" id="generate-plan-btn">
+          <a href="{{ url_for('questionnaire') }}" class="btn btn-primary-custom btn-lg btn-liquid pulse-glow-btn" id="generate-plan-btn">
             <span class="btn-text" style="position:relative; z-index:2;"><i class="bi bi-lightning-charge-fill me-2"></i>Start Free Health Analysis</span>
             <div class="liquid-bg"></div>
           </a>
@@ -81,6 +81,12 @@
               <p>Low GI index applied</p>
             </div>
           </div>
+          <!-- Hero Illustration -->
+          <div class="hero-image-container float-animate" style="text-align:center; margin-top: 1.5rem;">
+            <img src="{{ url_for('static', filename='images/hero-illustration.png') }}" 
+                 alt="AI-powered healthy meal planning with fresh nutritious foods"
+                 loading="lazy" width="480" height="480">
+          </div>
         </div>
       </div>
     </div>
@@ -122,9 +128,12 @@
   <div class="container">
     <div class="section-header text-center">
       <span class="section-tag">Simple 3-Step Process</span>
-      <h2 class="section-title">How NutriAI Works</h2>
+      <h2 class="section-title section-heading-enhanced">How NutriAI Works</h2>
       <p class="section-sub">From health data to personalised meal plan in under 60 seconds</p>
     </div>
+    <img src="{{ url_for('static', filename='images/how-it-works.png') }}" 
+         alt="How AI diet planning works: questionnaire, analysis, personalized plan"
+         class="section-illustration" loading="lazy">
     <div class="row g-4 mt-2">
       <div class="col-md-4">
         <div class="how-card">
@@ -159,7 +168,7 @@
   <div class="container">
     <div class="section-header text-center mb-4">
       <span class="section-tag">Strict Diet Compliance</span>
-      <h2 class="section-title">Works for Every Diet Type</h2>
+      <h2 class="section-title section-heading-enhanced">Works for Every Diet Type</h2>
       <p class="section-sub">NutriAI's AI is safety-checked — if it ever includes the wrong foods, the plan is automatically rejected and rebuilt</p>
     </div>
     <div class="row g-3 justify-content-center">
@@ -197,7 +206,7 @@
     <div class="row align-items-center g-5">
       <div class="col-lg-5">
         <span class="section-tag">Medical-Aware Nutrition</span>
-        <h2 class="section-title">Plans That Adapt to Your Health Conditions</h2>
+        <h2 class="section-title section-heading-enhanced">Plans That Adapt to Your Health Conditions</h2>
         <p class="section-sub">Select your medical conditions in Section 4 of the questionnaire and NutriAI adjusts your entire diet accordingly.</p>
         <a href="{{ url_for('questionnaire') }}" class="btn btn-primary-custom mt-3">
           Create My Plan <i class="bi bi-arrow-right ms-1"></i>
@@ -235,7 +244,7 @@
     <div class="row align-items-center g-5">
       <div class="col-lg-5">
         <span class="section-tag">Why NutriAI</span>
-        <h2 class="section-title">Science-Backed<br>Personalised Nutrition</h2>
+        <h2 class="section-title section-heading-enhanced">Science-Backed<br>Personalised Nutrition</h2>
         <p class="section-sub">Every plan follows the Harvard Healthy Eating Plate and UK Eatwell Guide — the world's most trusted nutrition frameworks.</p>
         <a href="{{ url_for('questionnaire') }}" class="btn btn-primary-custom mt-3">
           Start Your Analysis <i class="bi bi-arrow-right ms-1"></i>
@@ -267,7 +276,7 @@
   <div class="container">
     <div class="section-header text-center">
       <span class="section-tag">50+ Health Factors</span>
-      <h2 class="section-title">The Most Thorough Health Analysis</h2>
+      <h2 class="section-title section-heading-enhanced">The Most Thorough Health Analysis</h2>
       <p class="section-sub">No other free tool analyses this many aspects of your health</p>
     </div>
     <div class="row g-3 mt-2">
@@ -303,7 +312,7 @@
     <h2>Ready to Eat Smarter?</h2>
     <p>Join thousands who've discovered their perfect personalised diet plan — completely free</p>
     <div class="d-flex gap-3 justify-content-center flex-wrap mt-4">
-      <a href="{{ url_for('questionnaire') }}" class="btn btn-cta-white btn-lg">
+      <a href="{{ url_for('questionnaire') }}" class="btn btn-cta-white btn-lg pulse-glow-btn">
         <i class="bi bi-lightning-charge-fill me-2"></i>Get My Free Diet Plan
       </a>
       <a href="{{ url_for('register') }}" class="btn btn-cta-outline btn-lg">

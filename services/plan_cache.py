@@ -21,7 +21,7 @@ def _make_key(user_data: dict, metrics: dict) -> str:
         'cuisine':      user_data.get('cuisine_preference', 'Indian'),
     }
     raw = json.dumps(key_fields, sort_keys=True)
-    return hashlib.md5(raw.encode()).hexdigest()
+    return hashlib.sha256(raw.encode()).hexdigest()
 
 
 def get_cached(user_data: dict, metrics: dict):

@@ -62,8 +62,6 @@ def execute(conn, sql, params=()):
     """Execute and return lastrowid / cursor."""
     cur = conn.cursor()
     cur.execute(q(sql), params)
-    if USE_PG:
-        return cur
     return cur
 
 
