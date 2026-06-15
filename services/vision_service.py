@@ -6,6 +6,12 @@ from typing import Any, Dict, Optional, Tuple
 
 from config import Config
 
+_STOP_WORDS = frozenset({
+    "today", "yesterday", "breakfast", "lunch", "dinner", "snack", "snacks",
+    "ate", "had", "have", "with", "and", "then", "also", "some", "a", "an",
+    "the", "of", "to", "for", "in", "on", "at", "my", "i"
+})
+
 
 def _strip_data_url_prefix(data: str) -> Tuple[str, Optional[str]]:
     """
@@ -133,37 +139,9 @@ def analyze_voice_text(transcript: str, user: Optional[Dict[str, Any]] = None) -
 
     # Fallback: naive extraction of likely food tokens.
     tokens = re.findall(r"[a-zA-Z][a-zA-Z\-']{2,}", t.lower())
-    stop = {
-        "today",
-        "yesterday",
-        "breakfast",
-        "lunch",
-        "dinner",
-        "snack",
-        "snacks",
-        "ate",
-        "had",
-        "have",
-        "with",
-        "and",
-        "then",
-        "also",
-        "some",
-        "a",
-        "an",
-        "the",
-        "of",
-        "to",
-        "for",
-        "in",
-        "on",
-        "at",
-        "my",
-        "i",
-    }
     items = []
     for tok in tokens:
-        if tok in stop:
+        if tok in _STOP_WORDS:
             continue
         if tok not in items:
             items.append(tok)

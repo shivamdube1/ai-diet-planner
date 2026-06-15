@@ -44,6 +44,7 @@
         {% endif %}
 
         <form method="POST" action="{{ url_for('register') }}" id="registerForm" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="auth-field">
             <label>Full Name</label>
             <div class="auth-input-wrap">
@@ -87,13 +88,18 @@
           <div class="auth-terms">
             <label class="auth-check-label">
               <input type="checkbox" id="agreeTerms" required>
-              <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+              <span>I confirm I am 18 years of age or older, and agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
             </label>
           </div>
 
           <button type="submit" class="auth-btn" id="submitBtn">
             <i class="bi bi-person-plus-fill me-2"></i>Create Account & Start Analysis
           </button>
+
+          <a href="{{ url_for('login_google') }}" class="google-auth-btn">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo" class="google-icon">
+            <span>Sign up with Google</span>
+          </a>
 
           <div class="auth-divider"><span>or</span></div>
           <a href="{{ url_for('questionnaire') }}" class="auth-btn-ghost">

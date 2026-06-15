@@ -16,6 +16,9 @@ def create_reset_token_table():
                 used INTEGER DEFAULT 0
             )
         """)))
+        # ── Performance Optimization Index ──
+        conn.cursor().execute(q('CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token)'))
+
         conn.commit()
     finally:
         conn.close()

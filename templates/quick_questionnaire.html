@@ -66,6 +66,7 @@
 
     <!-- Hidden form that gets submitted -->
     <form method="POST" action="{{ url_for('analyze') }}" id="quickForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="mode" value="basic">
       <input type="hidden" name="name" id="f_name" value="NutriAI User">
       <input type="hidden" name="age" id="f_age" value="25">

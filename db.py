@@ -21,6 +21,7 @@ def get_db(retries=3, delay=2):
                     _pg_dsn,
                     cursor_factory=psycopg2.extras.RealDictCursor,
                     connect_timeout=5,
+                    sslmode='require',
                 )
                 return conn
             except psycopg2.OperationalError as e:

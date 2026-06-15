@@ -116,6 +116,11 @@ def create_tables():
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         ''')))
+        # ── Performance Optimization Indexes ──
+        conn.cursor().execute(q('CREATE INDEX IF NOT EXISTS idx_users_account_id ON users(account_id)'))
+        conn.cursor().execute(q('CREATE INDEX IF NOT EXISTS idx_diet_plans_user_id ON diet_plans(user_id)'))
+        conn.cursor().execute(q('CREATE INDEX IF NOT EXISTS idx_progress_user_id ON progress(user_id)'))
+        conn.cursor().execute(q('CREATE INDEX IF NOT EXISTS idx_food_diary_user_id_date ON food_diary(user_id, date)'))
 
         conn.commit()
     finally:

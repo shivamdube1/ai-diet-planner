@@ -26,30 +26,36 @@ def calculate_bmr(weight_kg, height_cm, age, gender):
     return round(bmr, 1)
 
 
+_ACTIVITY_MULTIPLIERS = {
+    'sedentary': 1.2,
+    'light': 1.375,
+    'moderate': 1.55,
+    'active': 1.725,
+    'very_active': 1.9
+}
+
+_FREQ_SCORES = {'0': 0, '1-2': 1, '3-5': 2, '6-7': 3}
+_WORK_SCORES = {'sedentary': 0, 'mixed': 1, 'physical': 2}
+_STEP_SCORES = {'<3000': 0, '3000-6000': 1, '6000-10000': 2, '>10000': 3}
+
+_GOAL_ADJUSTMENTS = {
+    'weight_loss': -500,
+    'muscle_gain': 300,
+    'maintain': 0
+}
+
+
 def get_activity_multiplier(activity_level):
     """Map activity level to TDEE multiplier."""
-    multipliers = {
-        'sedentary': 1.2,
-        'light': 1.375,
-        'moderate': 1.55,
-        'active': 1.725,
-        'very_active': 1.9
-    }
-    return multipliers.get(activity_level.lower(), 1.55)
+    return _ACTIVITY_MULTIPLIERS.get(activity_level.lower(), 1.55)
 
 
 def map_exercise_to_activity(exercise_frequency, work_type, daily_steps):
     """Determine activity level from questionnaire answers."""
     score = 0
-
-    freq_scores = {'0': 0, '1-2': 1, '3-5': 2, '6-7': 3}
-    score += freq_scores.get(exercise_frequency, 1)
-
-    work_scores = {'sedentary': 0, 'mixed': 1, 'physical': 2}
-    score += work_scores.get(work_type, 0)
-
-    step_scores = {'<3000': 0, '3000-6000': 1, '6000-10000': 2, '>10000': 3}
-    score += step_scores.get(daily_steps, 1)
+    score += _FREQ_SCORES.get(exercise_frequency, 1)
+    score += _WORK_SCORES.get(work_type, 0)
+    score += _STEP_SCORES.get(daily_steps, 1)
 
     if score <= 1:
         return 'sedentary'
@@ -71,12 +77,7 @@ def calculate_tdee(bmr, activity_level):
 
 def calculate_goal_calories(tdee, goal):
     """Adjust calories based on goal."""
-    adjustments = {
-        'weight_loss': -500,
-        'muscle_gain': 300,
-        'maintain': 0
-    }
-    adjustment = adjustments.get(goal, 0)
+    adjustment = _GOAL_ADJUSTMENTS.get(goal, 0)
     return round(tdee + adjustment, 1)
 
 

@@ -41,6 +41,7 @@
     </div>
 
     <form method="POST" action="{{ url_for('analyze') }}" id="healthForm" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       <!-- ══ S1: Personal Info ════════════════════════════════════════════ -->
       <div class="q-section active" id="section-1">

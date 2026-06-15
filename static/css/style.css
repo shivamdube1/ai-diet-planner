@@ -1465,6 +1465,35 @@ a:hover { color: var(--green-700); }
 }
 .auth-btn-ghost:hover { border-color: #94a3b8; color: #0f172a; background: #f1f5f9; }
 
+.google-auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  color: #334155;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.google-auth-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+.google-icon {
+  width: 18px;
+  height: 18px;
+}
+
 @media (max-width: 768px) {
   .auth-left { display: none; }
   .auth-right { padding: 32px 20px; }

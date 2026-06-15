@@ -32,6 +32,7 @@
     <div class="settings-card">
       <div class="settings-card-title"><i class="bi bi-person-fill me-2" style="color:#22c55e;"></i>Profile Information</div>
       <form method="POST" action="{{ url_for('account_settings') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="update_profile">
         <div class="settings-form-row">
           <div class="settings-field">
@@ -53,6 +54,7 @@
     <div class="settings-card">
       <div class="settings-card-title"><i class="bi bi-lock-fill me-2" style="color:#3b82f6;"></i>Change Password</div>
       <form method="POST" action="{{ url_for('account_settings') }}" id="pwForm" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="change_password">
         <div class="settings-form-row">
           <div class="settings-field">

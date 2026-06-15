@@ -43,6 +43,7 @@
         {% endif %}
 
         <form method="POST" action="{{ url_for('login') }}" id="loginForm" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="next" value="{{ next }}">
           <div class="auth-field">
             <label>Email Address</label>
@@ -72,6 +73,11 @@
           <button type="submit" class="auth-btn" id="loginBtn">
             <i class="bi bi-box-arrow-in-right me-2"></i>Log In
           </button>
+
+          <a href="{{ url_for('login_google') }}" class="google-auth-btn">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo" class="google-icon">
+            <span>Continue with Google</span>
+          </a>
 
           <div class="auth-divider"><span>or</span></div>
           <a href="{{ url_for('register') }}" class="auth-btn-ghost">

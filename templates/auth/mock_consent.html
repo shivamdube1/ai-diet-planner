@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mock Google Login Consent — NutriAI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: 'DM Sans', sans-serif; background: #f8fafc; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; max-width: 400px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; box-sizing: border-box; }
+        .logo { width: 48px; height: 48px; margin-bottom: 16px; }
+        h3 { margin: 0 0 8px; color: #0f172a; font-size: 1.3rem; }
+        p { color: #64748b; font-size: 0.9rem; margin: 0 0 24px; line-height: 1.5; }
+        .btn-google { background: #1a73e8; color: white; border: none; padding: 12px 24px; font-weight: 600; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; width: 100%; box-sizing: border-box; font-size: 0.9rem; }
+        .btn-google:hover { background: #1557b0; }
+        .btn-cancel { display: block; margin-top: 14px; font-size: 0.8rem; color: #64748b; text-decoration: none; font-weight: 500; }
+        .btn-cancel:hover { color: #0f172a; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo">
+        <h3>Sign in with Google (Sandbox)</h3>
+        <p>This is a mock sandbox environment. Click below to simulate signing in as <strong>google_test_user@example.com</strong>.</p>
+        <a href="{{ callback_url }}" class="btn-google">Authorize & Continue</a>
+        <a href="/login" class="btn-cancel">Cancel</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,744 @@
+
+<h2 class="sr-only">NutriAI comprehensive security implementation plan with preventative measures, detection methods, and incident response strategies</h2>
+<style>
+.wrap{padding:.75rem 0;font-family:var(--font-sans)}
+.tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.tab{padding:6px 13px;border-radius:100px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);transition:all .15s;white-space:nowrap}
+.tab.on{border-color:transparent;color:#fff}
+.t1.on{background:#185FA5}.t2.on{background:#27500A}.t3.on{background:#633806}.t4.on{background:#791F1F}.t5.on{background:#3C3489}
+.panel{display:none}.panel.on{display:block}
+
+.hero{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
+.hc{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 6px;text-align:center}
+.hv{font-size:20px;font-weight:500;line-height:1}
+.hl{font-size:9.5px;color:var(--color-text-secondary);margin-top:3px;line-height:1.3}
+.hb{font-size:9px;font-weight:600;padding:2px 6px;border-radius:100px;display:inline-block;margin-top:4px}
+.g{background:var(--color-background-success);color:var(--color-text-success)}
+.r{background:var(--color-background-danger);color:var(--color-text-danger)}
+.a{background:var(--color-background-warning);color:var(--color-text-warning)}
+.b{background:var(--color-background-info);color:var(--color-text-info)}
+
+.sh{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--color-text-tertiary);padding:10px 0 5px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:4px}
+.item{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:11px 13px;margin-bottom:8px;display:flex;gap:11px;align-items:flex-start}
+.i-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px}
+.i-body .i-title{font-size:12.5px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px;display:flex;align-items:center;gap:7px}
+.i-body .i-desc{font-size:11.5px;color:var(--color-text-secondary);line-height:1.55}
+.i-body .i-code{font-family:var(--font-mono);font-size:10.5px;background:var(--color-background-secondary);border-radius:6px;padding:6px 10px;margin-top:6px;display:block;color:var(--color-text-primary);white-space:pre-wrap;line-height:1.6}
+.pbadge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px}
+.p1{background:#FCEBEB;color:#A32D2D}
+.p2{background:#FAEEDA;color:#854F0B}
+.p3{background:#E6F1FB;color:#185FA5}
+.p4{background:#EAF3DE;color:#27500A}
+
+.threat-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px}
+.threat-row:last-child{border-bottom:none}
+.t-icon{font-size:1.1rem;flex-shrink:0;width:24px;text-align:center}
+.t-body{flex:1}
+.t-title{font-weight:500;color:var(--color-text-primary);margin-bottom:2px}
+.t-desc{font-size:11px;color:var(--color-text-secondary);line-height:1.5}
+.t-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;flex-shrink:0;align-self:flex-start}
+.tb-crit{background:#FCEBEB;color:#A32D2D}
+.tb-high{background:#FAEEDA;color:#854F0B}
+.tb-med{background:#E6F1FB;color:#185FA5}
+.tb-low{background:#EAF3DE;color:#27500A}
+
+.play-step{display:flex;gap:11px;padding:9px 0;border-bottom:0.5px solid var(--color-border-tertiary);align-items:flex-start}
+.play-step:last-child{border-bottom:none}
+.ps-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.ps-body .ps-title{font-size:12.5px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px}
+.ps-body .ps-desc{font-size:11.5px;color:var(--color-text-secondary);line-height:1.5}
+.ps-body .ps-code{font-family:var(--font-mono);font-size:10px;background:var(--color-background-secondary);border-radius:5px;padding:5px 9px;margin-top:5px;display:block;color:var(--color-text-primary);white-space:pre-wrap}
+.ps-time{font-size:9px;font-weight:600;padding:2px 7px;border-radius:100px;flex-shrink:0;align-self:flex-start;margin-top:2px}
+
+.check-row{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px}
+.check-row:last-child{border-bottom:none}
+.check-box{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--color-border-secondary);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.check-box.done{background:#16a34a;border-color:#16a34a;color:#fff;font-size:10px}
+.check-label{flex:1;color:var(--color-text-primary)}
+.check-badge{font-size:9px;font-weight:600;padding:1px 6px;border-radius:100px;flex-shrink:0}
+.cb-now{background:var(--color-background-danger);color:var(--color-text-danger)}
+.cb-week{background:var(--color-background-warning);color:var(--color-text-warning)}
+.cb-month{background:var(--color-background-info);color:var(--color-text-info)}
+</style>
+
+<div class="wrap">
+<div class="hero">
+  <div class="hc"><div class="hv">27</div><div class="hl">Security controls</div><div class="hb b">Detailed</div></div>
+  <div class="hc"><div class="hv" style="color:#27500A">9</div><div class="hl">Already built</div><div class="hb g">Active</div></div>
+  <div class="hc"><div class="hv" style="color:#A32D2D">6</div><div class="hl">Critical gaps</div><div class="hb r">Fix first</div></div>
+  <div class="hc"><div class="hv" style="color:#854F0B">8</div><div class="hl">Threat vectors</div><div class="hb a">Mapped</div></div>
+  <div class="hc"><div class="hv">3</div><div class="hl">Response playbooks</div><div class="hb b">Ready</div></div>
+</div>
+
+<div class="tabs">
+  <div class="tab t1 on" onclick="show('p',this)">🛡️ Prevention (12)</div>
+  <div class="tab t2" onclick="show('d',this)">🔍 Detection (7)</div>
+  <div class="tab t3" onclick="show('r',this)">🚨 Response (3 Playbooks)</div>
+  <div class="tab t4" onclick="show('t',this)">⚔️ Threat Map</div>
+  <div class="tab t5" onclick="show('c',this)">✅ Checklist</div>
+</div>
+
+<!-- ══ PREVENTION ══ -->
+<div class="panel on" id="pp">
+
+<div class="sh">🔴 Critical — implement immediately</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#FCEBEB">🔐</div>
+  <div class="i-body">
+    <div class="i-title">HTTPS-only enforcement + HSTS <span class="pbadge p1">Critical</span></div>
+    <div class="i-desc">All traffic must be encrypted in transit. Render provides HTTPS automatically but HSTS forces browsers to always use HTTPS even if a user types http://. Add to every response header so browsers cache the HTTPS-only rule for 1 year.</div>
+    <code class="i-code">@app.after_request
+def add_security_headers(response):
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['X-Content-Type-Options']    = 'nosniff'
+    response.headers['X-Frame-Options']           = 'DENY'
+    response.headers['X-XSS-Protection']          = '1; mode=block'
+    response.headers['Referrer-Policy']           = 'strict-origin-when-cross-origin'
+    response.headers['Content-Security-Policy']   = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self';"
+    )
+    return response</code>
+  </div>
+</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#FCEBEB">🔑</div>
+  <div class="i-body">
+    <div class="i-title">Rotate all exposed secrets immediately <span class="pbadge p1">Critical</span></div>
+    <div class="i-desc">The Gemini API key was previously visible in GitHub history. Any key committed to a public repo must be considered fully compromised — bots scan GitHub for API keys within seconds of a commit. Rotate it now, then move all secrets to Render environment variables. Never put secrets in code files again.</div>
+    <code class="i-code"># Step 1: Revoke old Gemini key
+# Go to: https://aistudio.google.com/app/apikey → Delete old key → Create new
+
+# Step 2: Remove from git history (if in a committed file)
+git filter-branch --force --index-filter \
+  'git rm --cached --ignore-unmatch config.py' HEAD
+
+# Step 3: Set ALL secrets as Render environment variables
+# GEMINI_API_KEY, SECRET_KEY, ADMIN_PASSWORD, DATABASE_URL
+# Never in config.py, never in .env committed to git
+
+# Step 4: Verify .gitignore covers secrets
+echo ".env" >> .gitignore
+echo "*.db" >> .gitignore</code>
+  </div>
+</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#FCEBEB">🗄️</div>
+  <div class="i-body">
+    <div class="i-title">Connect PostgreSQL + enable SSL on connection <span class="pbadge p1">Critical</span></div>
+    <div class="i-desc">SQLite on Render's ephemeral disk resets on every deploy — all user data is permanently lost. PostgreSQL persists across deploys. The connection must also use SSL to encrypt data in transit between the app and the database. Render's Internal URL already includes SSL by default.</div>
+    <code class="i-code"># In db.py — force SSL for PostgreSQL connections
+if PG:
+    import psycopg2
+    conn = psycopg2.connect(
+        os.environ['DATABASE_URL'],
+        sslmode='require'   # enforces encrypted connection
+    )
+
+# Verify SSL is active from Render logs:
+# Look for "SSL connection (protocol: TLSv1.3)" in startup logs</code>
+  </div>
+</div>
+
+<div class="sh">🟡 Authentication hardening</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#FAEEDA">🔒</div>
+  <div class="i-body">
+    <div class="i-title">Session security hardening <span class="pbadge p2">High</span></div>
+    <div class="i-desc">Flask sessions are signed cookies. Without proper config, they can be hijacked via XSS or stolen over HTTP. These 4 settings make sessions cryptographically secure and scope them to the current request context.</div>
+    <code class="i-code">app.config.update(
+    SECRET_KEY            = os.environ['SECRET_KEY'],  # min 64 random hex chars
+    SESSION_COOKIE_SECURE = True,       # only send over HTTPS
+    SESSION_COOKIE_HTTPONLY = True,     # JS cannot access cookie
+    SESSION_COOKIE_SAMESITE = 'Lax',   # CSRF protection
+    PERMANENT_SESSION_LIFETIME = 86400, # 24-hour session lifetime
+    SESSION_COOKIE_NAME = '_nutriai_session',
+)</code>
+  </div>
+</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#FAEEDA">🛡️</div>
+  <div class="i-body">
+    <div class="i-title">CSRF protection on all state-changing forms <span class="pbadge p2">High</span></div>
+    <div class="i-desc">Cross-Site Request Forgery attacks trick a logged-in user's browser into submitting forms to your site from another site. Every POST form (register, login, forgot-password, analyze, diary add) needs a CSRF token. Flask-WTF adds this automatically. Without it, an attacker can forge requests on behalf of your users.</div>
+    <code class="i-code">pip install flask-wtf
+
+# In config.py
+WTF_CSRF_ENABLED = True
+WTF_CSRF_SECRET_KEY = os.environ.get('SECRET_KEY')
+
+# In app.py
+from flask_wtf.csrf import CSRFProtect
+csrf = CSRFProtect(app)
+
+# In every HTML form
+&lt;form method="POST"&gt;
+  &lt;input type="hidden" name="csrf_token" value="{{ csrf_token() }}"&gt;
+  ...
+&lt;/form&gt;
+
+# AJAX requests need the token in headers
+const resp = await fetch('/api/diary/add', {
+  method: 'POST',
+  headers: {'X-CSRFToken': document.cookie.match(/csrf_token=([^;]+)/)?.[1]},
+  body: JSON.stringify(data)
+})</code>
+  </div>
+</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#FAEEDA">📧</div>
+  <div class="i-body">
+    <div class="i-title">Email verification on registration <span class="pbadge p2">High</span></div>
+    <div class="i-desc">Currently users can register with any email including non-existent or fake ones. This prevents abuse (bulk fake accounts) and ensures password reset emails reach real users. Send a verification link on register; only allow login after verification. Use the same SendGrid integration as password reset.</div>
+    <code class="i-code"># In auth_model.py — add email_verified field
+ALTER TABLE accounts ADD COLUMN email_verified INTEGER DEFAULT 0;
+
+# On register: generate token, send email, set email_verified=0
+# On /verify-email/&lt;token&gt;: set email_verified=1, auto-login
+# Block login if email_verified=0 with helpful message
+
+# SendGrid free tier = 100 emails/day — enough for early scale
+import sendgrid
+sg = sendgrid.SendGridAPIClient(os.environ['SENDGRID_API_KEY'])
+message = Mail(
+    from_email='noreply@yourdomain.com',
+    to_emails=user_email,
+    subject='Verify your NutriAI account',
+    html_content=f'&lt;a href="{verify_url}"&gt;Click to verify your email&lt;/a&gt;'
+)
+sg.send(message)</code>
+  </div>
+</div>
+
+<div class="sh">🔵 API & input security</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#E6F1FB">📏</div>
+  <div class="i-body">
+    <div class="i-title">Strict server-side input validation on all fields <span class="pbadge p3">Medium</span></div>
+    <div class="i-desc">Browser-side validation (HTML min/max, required) can be bypassed with curl or Burp Suite in seconds. Every field must be validated on the server before touching the database or AI. The age clamping fix is already done — extend this pattern to all fields.</div>
+    <code class="i-code">def validate_analyze_input(form):
+    errors = []
+    # Numeric bounds
+    age    = min(max(int(form.get('age', 25)), 10), 100)
+    height = min(max(float(form.get('height', 170)), 50), 300)
+    weight = min(max(float(form.get('weight', 70)), 10), 500)
+
+    # Enum validation — only allow known values
+    allowed_goals   = {'weight_loss','muscle_gain','maintain'}
+    allowed_diets   = {'vegetarian','vegan','non_vegetarian'}
+    allowed_genders = {'male','female','other'}
+
+    goal   = form.get('goal','maintain')
+    diet   = form.get('diet_type','non_vegetarian')
+    gender = form.get('gender','male')
+
+    if goal   not in allowed_goals:   errors.append('Invalid goal')
+    if diet   not in allowed_diets:   errors.append('Invalid diet type')
+    if gender not in allowed_genders: errors.append('Invalid gender')
+
+    # Text field sanitization (strip HTML tags)
+    import re
+    name = re.sub(r'&lt;[^&gt;]+&gt;', '', form.get('name','User'))[:100]
+
+    if errors:
+        raise ValueError('; '.join(errors))
+    return age, height, weight, goal, diet, gender, name</code>
+  </div>
+</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#E6F1FB">🖼️</div>
+  <div class="i-body">
+    <div class="i-title">File upload security for food image scan <span class="pbadge p3">Medium</span></div>
+    <div class="i-desc">The /api/analyze-food-image endpoint accepts base64-encoded images. Without validation, an attacker could send malformed data, extremely large payloads, or non-image files. All three must be caught before the data reaches Gemini Vision.</div>
+    <code class="i-code">ALLOWED_MIME_TYPES = {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}
+MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10MB
+
+def validate_image_upload(image_data: str, mime_type: str):
+    # 1. Check MIME type whitelist
+    if mime_type not in ALLOWED_MIME_TYPES:
+        raise ValueError(f'Unsupported image type: {mime_type}')
+
+    # 2. Strip data URI prefix if present
+    if ',' in image_data:
+        image_data = image_data.split(',', 1)[1]
+
+    # 3. Validate base64 encoding
+    import base64, binascii
+    try:
+        raw = base64.b64decode(image_data)
+    except (binascii.Error, ValueError):
+        raise ValueError('Invalid base64 encoding')
+
+    # 4. Check decoded size
+    if len(raw) &gt; MAX_IMAGE_SIZE_BYTES:
+        raise ValueError('Image exceeds 10MB limit')
+
+    # 5. Check magic bytes (file signature)
+    MAGIC = {
+        b'\xff\xd8\xff': 'image/jpeg',
+        b'\x89PNG':      'image/png',
+        b'RIFF':         'image/webp',
+        b'GIF8':         'image/gif',
+    }
+    matched = any(raw.startswith(sig) for sig in MAGIC)
+    if not matched:
+        raise ValueError('File content does not match declared type')
+
+    return raw</code>
+  </div>
+</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#E6F1FB">💉</div>
+  <div class="i-body">
+    <div class="i-title">SQL injection prevention — audit all queries <span class="pbadge p3">Medium</span></div>
+    <div class="i-desc">Parameterized queries are already used throughout the codebase (the q() helper ensures ? → %s conversion). This is a verification step — audit every query in every model file to confirm zero string formatting or f-strings are used to build SQL.</div>
+    <code class="i-code"># SAFE — parameterized (always use this)
+row = fetchone(conn, q("SELECT * FROM users WHERE email = ?"), (email,))
+
+# UNSAFE — never do this
+row = fetchone(conn, f"SELECT * FROM users WHERE email = '{email}'")
+row = fetchone(conn, "SELECT * FROM users WHERE email = '%s'" % email)
+
+# Audit command — find any potentially unsafe query patterns
+grep -rn "f\"SELECT\|f'SELECT\|% email\|% user" models/ services/
+
+# All admin queries — verify they use (user_id,) tuple not string format
+# models/admin_model.py — every fetchone/fetchall call should use q() + tuple</code>
+  </div>
+</div>
+
+<div class="sh">🟢 Infrastructure & access control</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#EAF3DE">🌐</div>
+  <div class="i-body">
+    <div class="i-title">Render access controls — restrict dashboard access <span class="pbadge p4">Low</span></div>
+    <div class="i-desc">The Render dashboard controls your database, environment variables, and deployment. If compromised, an attacker can inject malicious env vars, access the database, or redirect traffic. Enable 2FA on your Render account and restrict who has access.</div>
+    <code class="i-code"># Actions to take in Render dashboard:
+# 1. Account Settings → Security → Enable Two-Factor Authentication (2FA)
+# 2. Never share your Render login credentials
+# 3. Use Render Teams for any collaborators — don't share the owner account
+# 4. Review API keys under Account → API Keys — delete unused ones
+# 5. Enable GitHub branch protection on main so only reviewed code deploys
+
+# GitHub repository settings:
+# Settings → Branches → main → Require pull request reviews
+# Settings → Secrets → never store secrets in repository variables</code>
+  </div>
+</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#EAF3DE">🔢</div>
+  <div class="i-body">
+    <div class="i-title">Enhanced rate limiting — Redis-backed for production scale <span class="pbadge p4">Future</span></div>
+    <div class="i-desc">The current in-memory rate limiter works on a single Gunicorn worker but resets on restart and doesn't share state across multiple workers or Render instances. When you scale to 2+ workers or want persistence, migrate to Redis-backed rate limiting. Render offers Redis at $7/month.</div>
+    <code class="i-code">pip install flask-limiter[redis] redis
+
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    storage_uri=os.environ.get('REDIS_URL', 'memory://'),
+    default_limits=["200 per day", "50 per hour"],
+)
+
+@app.route('/analyze', methods=['POST'])
+@limiter.limit("5 per 10 minutes")
+def analyze():
+    ...
+
+@app.route('/login', methods=['POST'])
+@limiter.limit("10 per 5 minutes")
+def login():
+    ...</code>
+  </div>
+</div>
+
+</div>
+
+<!-- ══ DETECTION ══ -->
+<div class="panel" id="pd">
+
+<div class="sh">📊 Logging — see everything that happens</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#EAF3DE">📝</div>
+  <div class="i-body">
+    <div class="i-title">Structured security event logging <span class="pbadge p1">Critical</span></div>
+    <div class="i-desc">Without logging, breaches are invisible. Add structured JSON logging to every security-relevant event: failed logins, rate limit hits, blocked requests, admin actions, password resets, account deletions. Render streams these to its log dashboard and you can grep them.</div>
+    <code class="i-code">import logging, json
+from datetime import datetime
+
+logger = logging.getLogger('nutriai.security')
+logging.basicConfig(level=logging.INFO, format='%(message)s')
+
+def sec_log(event: str, ip: str, extra: dict = None):
+    """Emit a structured security event to stdout (captured by Render logs)."""
+    payload = {
+        'ts':    datetime.utcnow().isoformat(),
+        'event': event,
+        'ip':    ip,
+        **(extra or {})
+    }
+    logger.warning(json.dumps(payload))
+
+# Usage throughout app.py:
+# Failed login
+sec_log('LOGIN_FAIL', ip, {'email': email, 'reason': err})
+
+# Rate limit hit
+sec_log('RATE_LIMIT', ip, {'endpoint': request.path, 'limit': '5/10min'})
+
+# Admin login
+sec_log('ADMIN_LOGIN', ip, {'username': username, 'success': True})
+
+# Suspicious input (XSS attempt detected)
+sec_log('SUSPICIOUS_INPUT', ip, {'field': 'name', 'value': name[:50]})
+
+# Password reset requested
+sec_log('PASSWORD_RESET_REQ', ip, {'email': email})</code>
+  </div>
+</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#EAF3DE">🚦</div>
+  <div class="i-body">
+    <div class="i-title">Failed authentication tracking + auto-lockout <span class="pbadge p2">High</span></div>
+    <div class="i-desc">The rate limiter blocks by IP but a distributed attack from many IPs (botnet) would bypass it. Track consecutive failed login attempts per email address and temporarily lock the account after 10 failures within 15 minutes, regardless of source IP.</div>
+    <code class="i-code">_failed_logins: dict = {}  # {email: [timestamp, ...]}
+
+def record_failed_login(email: str) -> bool:
+    """Returns True if account should be locked."""
+    import time
+    now = time.time()
+    window = 900  # 15 minutes
+    # Keep only attempts within window
+    attempts = [t for t in _failed_logins.get(email, []) if now - t &lt; window]
+    attempts.append(now)
+    _failed_logins[email] = attempts
+    # Lock after 10 failures in window
+    return len(attempts) &gt;= 10
+
+def is_account_locked(email: str) -> bool:
+    import time
+    now = time.time()
+    attempts = [t for t in _failed_logins.get(email, []) if now - t &lt; 900]
+    return len(attempts) &gt;= 10
+
+# In login route:
+if is_account_locked(email):
+    sec_log('ACCOUNT_LOCKED', ip, {'email': email})
+    return render_template('auth/login.html',
+        error='Account temporarily locked. Try again in 15 minutes.'), 429
+
+acc, err = login_account(email, password)
+if err:
+    if record_failed_login(email):
+        sec_log('ACCOUNT_LOCKED', ip, {'email': email, 'attempts': 10})
+    else:
+        sec_log('LOGIN_FAIL', ip, {'email': email})</code>
+  </div>
+</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#EAF3DE">🕵️</div>
+  <div class="i-body">
+    <div class="i-title">Anomaly detection on API usage patterns <span class="pbadge p2">High</span></div>
+    <div class="i-desc">Detect unusual usage patterns that suggest abuse: same IP generating plans 24/7, voice log being called with very long transcripts (prompt injection attempt), unusually large request payloads, unusual User-Agent strings.</div>
+    <code class="i-code">def detect_anomalies(request):
+    ip  = get_ip(request)
+    ua  = request.headers.get('User-Agent', '')
+    size = request.content_length or 0
+
+    anomalies = []
+
+    # Suspicious User-Agents (bots, scanners, scrapers)
+    suspicious_ua = ['sqlmap', 'nikto', 'nmap', 'masscan', 'zgrab',
+                     'python-requests', 'curl/', 'wget/', 'scrapy']
+    if any(s in ua.lower() for s in suspicious_ua):
+        anomalies.append(f'suspicious_ua:{ua[:50]}')
+
+    # Unusually large request (potential DoS or injection)
+    if size &gt; 1024 * 1024:  # 1MB
+        anomalies.append(f'large_request:{size}')
+
+    # Missing User-Agent (bot behaviour)
+    if not ua:
+        anomalies.append('missing_ua')
+
+    # Voice transcript over 500 chars (prompt injection attempt)
+    if request.path == '/api/voice-log':
+        data = request.get_json(silent=True) or {}
+        if len(data.get('transcript', '')) &gt; 500:
+            anomalies.append('long_transcript')
+
+    if anomalies:
+        sec_log('ANOMALY', ip, {'path': request.path, 'flags': anomalies})
+
+    return anomalies</code>
+  </div>
+</div>
+
+<div class="sh">📈 Monitoring — watch the numbers</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#FAEEDA">📊</div>
+  <div class="i-body">
+    <div class="i-title">Health check + metrics endpoint for uptime monitoring <span class="pbadge p2">High</span></div>
+    <div class="i-desc">Extend the /ping endpoint to return key health metrics. Use a free uptime monitor (UptimeRobot, Better Uptime) to ping it every 5 minutes and alert you if it goes down. This catches crashes, database outages, and cold-start failures immediately.</div>
+    <code class="i-code">@app.route('/health')
+def health():
+    checks = {'status': 'ok', 'db': False, 'cache': False}
+    try:
+        conn = get_db(); fetchone(conn, 'SELECT 1'); conn.close()
+        checks['db'] = True
+    except Exception as e:
+        checks['db_error'] = str(e)
+        checks['status'] = 'degraded'
+    checks['cache'] = cache_stats()
+    checks['rate_limits'] = 'active'
+    code = 200 if checks['status'] == 'ok' else 503
+    return jsonify(checks), code
+
+# Set up free monitoring:
+# 1. uptimerobot.com → New monitor → HTTP(S) → URL: /health
+# 2. Alert via email when status != 200
+# 3. Render dashboard also shows crashes in the Logs tab</code>
+  </div>
+</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#FAEEDA">💬</div>
+  <div class="i-body">
+    <div class="i-title">Real-time alerts to Telegram or email on critical events <span class="pbadge p3">Medium</span></div>
+    <div class="i-desc">Some events need immediate notification: account lockouts (active attack), admin login from new IP, spike in 429 responses (rate-limit abuse), database connection failure. A simple Telegram bot takes 10 minutes to set up and sends instant alerts to your phone.</div>
+    <code class="i-code">import requests as req
+
+def alert(message: str):
+    """Send a Telegram alert message (instant, free)."""
+    token   = os.environ.get('TELEGRAM_BOT_TOKEN')
+    chat_id = os.environ.get('TELEGRAM_CHAT_ID')
+    if not token or not chat_id: return
+    try:
+        req.post(
+            f'https://api.telegram.org/bot{token}/sendMessage',
+            json={'chat_id': chat_id, 'text': f'🚨 NutriAI Alert\n{message}'},
+            timeout=3
+        )
+    except Exception: pass
+
+# Setup:
+# 1. Telegram → search @BotFather → /newbot → get TOKEN
+# 2. Message your bot once → get CHAT_ID from:
+#    curl https://api.telegram.org/bot{TOKEN}/getUpdates
+# 3. Add to Render env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+
+# Alert on critical events:
+alert(f'Account lockout: {email} ({ip})')          # brute force
+alert(f'Admin login from new IP: {ip}')            # access
+alert(f'DB connection failed: {error}')            # outage
+alert(f'429 spike: {count} rate limits in 1 min') # abuse</code>
+  </div>
+</div>
+
+<div class="item">
+  <div class="i-icon" style="background:#FAEEDA">🧪</div>
+  <div class="i-body">
+    <div class="i-title">Weekly automated security scan (OWASP ZAP) <span class="pbadge p3">Medium</span></div>
+    <div class="i-desc">OWASP ZAP is a free automated security scanner. Run it monthly against your live URL to detect XSS, injection, misconfigured headers, open redirects, and other OWASP Top 10 vulnerabilities. It takes 20 minutes and produces a report.</div>
+    <code class="i-code"># Install OWASP ZAP (free, cross-platform)
+# https://www.zaproxy.org/download/
+
+# Quick scan via command line (after installing):
+zap.sh -quickurl https://ai-diet-planner-ffmj.onrender.com \
+       -quickout /tmp/nutriai-scan-report.html \
+       -quickprogress
+
+# What it checks automatically:
+# - SQL injection in all form fields
+# - XSS in form inputs and URL parameters
+# - Security header presence (CSP, HSTS, X-Frame-Options)
+# - Open redirects
+# - Information disclosure (stack traces, version headers)
+# - Broken authentication (session fixation, weak tokens)
+
+# Also run Nikto for a quick check:
+nikto -h https://ai-diet-planner-ffmj.onrender.com</code>
+  </div>
+</div>
+
+</div>
+
+<!-- ══ RESPONSE PLAYBOOKS ══ -->
+<div class="panel" id="pr">
+
+<div class="sh" style="color:#A32D2D">🔴 Playbook 1 — Data Breach / Unauthorized Database Access</div>
+<div class="play-step"><div class="ps-num" style="background:#A32D2D">1</div><div class="ps-body"><div class="ps-title">Detect: Signs of database breach</div><div class="ps-desc">Unexpected spike in admin API calls. Unusual SELECT queries in Render logs. User reports seeing other users' data. 404 spikes suggesting directory scanning.</div></div><span class="ps-time" style="background:#FCEBEB;color:#A32D2D">0-5 min</span></div>
+<div class="play-step"><div class="ps-num" style="background:#A32D2D">2</div><div class="ps-body"><div class="ps-title">Contain: Immediately revoke all access</div><div class="ps-desc">Rotate DATABASE_URL password immediately via Render dashboard. This disconnects all active database connections including any attacker's. Also rotate SECRET_KEY which invalidates all active sessions (forces all users to re-login).</div><code class="ps-code"># Render dashboard → PostgreSQL → Settings → Reset password
+# IMMEDIATELY update DATABASE_URL env var with new password
+# Also update SECRET_KEY env var (invalidates ALL sessions)
+# Trigger manual redeploy to apply new credentials</code></div><span class="ps-time" style="background:#FCEBEB;color:#A32D2D">5-15 min</span></div>
+<div class="play-step"><div class="ps-num" style="background:#A32D2D">3</div><div class="ps-body"><div class="ps-title">Assess: Determine what was accessed</div><div class="ps-desc">Check Render logs for the time period around the incident. Look for unusual IPs, unusual query patterns, bulk data exports. Check which tables were accessed (users, accounts, diet_plans, food_diary).</div><code class="ps-code"># Download Render logs for the incident window
+# Grep for SELECT queries and unusual activity
+grep "SELECT\|UPDATE\|DELETE" render_logs.txt | grep -v "expected_ip"
+
+# Check admin access logs
+grep "admin_login\|ADMIN" render_logs.txt
+
+# Identify which data may have been exposed:
+# accounts table → name, email, hashed passwords
+# users table → health data (medical conditions, BMI, diet)
+# food_diary → meal logs
+# Note: passwords are scrypt-hashed (not crackable)</code></div><span class="ps-time" style="background:#FAEEDA;color:#854F0B">15-60 min</span></div>
+<div class="play-step"><div class="ps-num" style="background:#A32D2D">4</div><div class="ps-body"><div class="ps-title">Notify: Email all affected users</div><div class="ps-desc">Under DPDP (India's Digital Personal Data Protection Act 2023), you must notify affected users and the Data Protection Board. Send a clear, honest email to all users explaining what happened, what data was exposed, and what they should do.</div><code class="ps-code"># Email template to all users via SendGrid
+Subject: Important security notice — NutriAI
+
+We discovered a security incident on [DATE].
+
+What happened: [brief, honest explanation]
+What data may have been affected: [specific fields]
+What you should do: Change your password immediately
+  → https://ai-diet-planner-ffmj.onrender.com/forgot-password
+
+Your passwords were stored using strong cryptographic hashing
+(scrypt) and cannot be read by anyone, including us.
+
+We apologise for this incident and have taken the
+following steps to prevent recurrence: [list fixes]</code></div><span class="ps-time" style="background:#FAEEDA;color:#854F0B">1-24 hr</span></div>
+<div class="play-step"><div class="ps-num" style="background:#A32D2D">5</div><div class="ps-body"><div class="ps-title">Remediate: Fix the root cause and prevent recurrence</div><div class="ps-desc">Identify exactly how the attacker got in. Patch the vulnerability. Add detection to catch the same vector again. Review all similar code paths for the same issue. Deploy the fix and verify it works.</div></div><span class="ps-time" style="background:#EAF3DE;color:#27500A">24-72 hr</span></div>
+
+<div class="sh" style="color:#854F0B;margin-top:10px">🟠 Playbook 2 — API Abuse / DDoS Attack</div>
+<div class="play-step"><div class="ps-num" style="background:#854F0B">1</div><div class="ps-body"><div class="ps-title">Detect: Rate limit spike or Gemini quota exhaustion</div><div class="ps-desc">Telegram alert fires: "429 spike: 50+ rate limits in 1 min." Render logs show one IP or IP range hammering /analyze. Gemini API dashboard shows quota near limit despite normal user traffic.</div></div><span class="ps-time" style="background:#FAEEDA;color:#854F0B">Immediate</span></div>
+<div class="play-step"><div class="ps-num" style="background:#854F0B">2</div><div class="ps-body"><div class="ps-title">Block: Temporarily block the attacking IP range</div><div class="ps-desc">Render doesn't have a built-in IP block but you can add middleware to reject specific IPs or ranges before they hit your routes.</div><code class="ps-code"># Add to app.py — IP blocklist middleware
+BLOCKED_IPS = set()  # populate dynamically or from a file
+
+@app.before_request
+def block_bad_ips():
+    ip = get_ip(request)
+    if ip in BLOCKED_IPS:
+        return jsonify({'error': 'Forbidden'}), 403
+    # Block entire /24 subnets if needed
+    subnet = '.'.join(ip.split('.')[:3])
+    if subnet in BLOCKED_SUBNETS:
+        return jsonify({'error': 'Forbidden'}), 403
+
+# Add attacker IP:
+BLOCKED_IPS.add('1.2.3.4')  # redeploy to apply</code></div><span class="ps-time" style="background:#FAEEDA;color:#854F0B">0-15 min</span></div>
+<div class="play-step"><div class="ps-num" style="background:#854F0B">3</div><div class="ps-body"><div class="ps-title">Reduce: Temporarily lower rate limits</div><div class="ps-desc">Lower the /analyze limit from 5/10min to 1/10min for all IPs until the attack subsides. This reduces Gemini API consumption but may affect legitimate users — acceptable for a short-term emergency.</div></div><span class="ps-time" style="background:#FAEEDA;color:#854F0B">15-30 min</span></div>
+<div class="play-step"><div class="ps-num" style="background:#854F0B">4</div><div class="ps-body"><div class="ps-title">Long-term: Cloudflare free tier for DDoS protection</div><div class="ps-desc">Cloudflare's free tier provides DDoS protection, bot detection, and IP reputation filtering. Change your DNS to point through Cloudflare. It terminates attacks before they reach Render. Takes 30 minutes to set up.</div><code class="ps-code"># Cloudflare free tier setup:
+# 1. cloudflare.com → Add site → free plan
+# 2. Change DNS nameservers to Cloudflare's
+# 3. Cloudflare → Security → Settings:
+#    Security Level = Medium (or High during attack)
+#    Bot Fight Mode = On
+#    Challenge Passage = 30 minutes
+# 4. Rules → Rate Limiting (free: 1 rule)
+#    Path: /analyze   Rate: 10 requests / 10 minutes / IP</code></div><span class="ps-time" style="background:#EAF3DE;color:#27500A">1-2 hr</span></div>
+
+<div class="sh" style="color:#185FA5;margin-top:10px">🔵 Playbook 3 — Compromised Admin Account</div>
+<div class="play-step"><div class="ps-num" style="background:#185FA5">1</div><div class="ps-body"><div class="ps-title">Detect: Unauthorized admin access</div><div class="ps-desc">Telegram alert fires: "Admin login from new IP: [suspicious IP]." Or you see users deleted in admin logs you didn't delete. Or a user reports their account was deleted without their request.</div></div><span class="ps-time" style="background:#E6F1FB;color:#185FA5">Immediate</span></div>
+<div class="play-step"><div class="ps-num" style="background:#185FA5">2</div><div class="ps-body"><div class="ps-title">Lock down: Change admin password immediately</div><div class="ps-desc">Change ADMIN_PASSWORD in Render environment variables. This takes effect on next deploy — trigger a manual redeploy immediately to activate the new password. The old password stops working the moment the deploy completes.</div><code class="ps-code"># Render → web service → Environment → ADMIN_PASSWORD
+# Change to a new strong password (16+ chars, mixed case, numbers, symbols)
+# Click Save Changes → manually trigger Deploy
+
+# Strong password example (generate your own):
+import secrets, string
+chars = string.ascii_letters + string.digits + '!@#$%^&*'
+print(''.join(secrets.choice(chars) for _ in range(20)))
+# Example: kX7#mR2$nP9@wQ4!jL6^</code></div><span class="ps-time" style="background:#E6F1FB;color:#185FA5">0-5 min</span></div>
+<div class="play-step"><div class="ps-num" style="background:#185FA5">3</div><div class="ps-body"><div class="ps-title">Audit: Check what the attacker did</div><div class="ps-desc">Review admin logs for the incident period. Check which user records were viewed or deleted. Check if any environment variables were changed (if they also got into Render). Check if any data was exported.</div></div><span class="ps-time" style="background:#E6F1FB;color:#185FA5">15-60 min</span></div>
+<div class="play-step"><div class="ps-num" style="background:#185FA5">4</div><div class="ps-body"><div class="ps-title">Harden: Add IP allowlist + 2FA to admin</div><div class="ps-desc">Restrict admin login to known IP addresses. Add an extra OTP verification layer on top of the username/password for admin routes. Consider moving admin to a separate subdomain with Cloudflare Access protection.</div><code class="ps-code"># Add IP allowlist for admin routes
+ADMIN_ALLOWED_IPS = {'your.home.ip', 'your.work.ip'}
+
+@admin_blueprint.before_request
+def check_admin_ip():
+    ip = get_ip(request)
+    if ip not in ADMIN_ALLOWED_IPS and not request.path.endswith('/login'):
+        sec_log('ADMIN_IP_BLOCK', ip)
+        return jsonify({'error': 'Forbidden'}), 403</code></div><span class="ps-time" style="background:#EAF3DE;color:#27500A">1-4 hr</span></div>
+
+</div>
+
+<!-- ══ THREAT MAP ══ -->
+<div class="panel" id="pt">
+<div style="font-size:11.5px;color:var(--color-text-secondary);margin-bottom:10px">Every known attack vector mapped to NutriAI's specific routes and data.</div>
+<div class="threat-row"><div class="t-icon">💉</div><div class="t-body"><div class="t-title">SQL Injection — /analyze, /login, /register</div><div class="t-desc">Attacker inserts SQL in form fields (email = ' OR '1'='1). NutriAI uses parameterized queries throughout db.py — protected. Ongoing risk: any new raw query added without q() helper.</div></div><span class="t-badge tb-low">Protected</span></div>
+<div class="threat-row"><div class="t-icon">📜</div><div class="t-body"><div class="t-title">XSS (Cross-Site Scripting) — all text input fields</div><div class="t-desc">Attacker injects &lt;script&gt;alert()&lt;/script&gt; in name/food/notes fields. Jinja2 auto-escaping is ON globally — protected. Risk: any new template using |safe on user data.</div></div><span class="t-badge tb-low">Protected</span></div>
+<div class="threat-row"><div class="t-icon">🔄</div><div class="t-body"><div class="t-title">CSRF — /api/diary/add, /analyze, /register</div><div class="t-desc">Attacker tricks logged-in user's browser into submitting a form via a malicious site. Not yet protected — Flask-WTF CSRF tokens not yet added to forms or AJAX calls.</div></div><span class="t-badge tb-high">Add CSRF tokens</span></div>
+<div class="threat-row"><div class="t-icon">🔨</div><div class="t-body"><div class="t-title">Brute Force Login — /login, /admin/login</div><div class="t-desc">Attacker tries thousands of password combinations. Rate limiter (10/5min on login, 5/5min on admin) protects against single-IP attacks. Distributed botnet attacks need per-account lockout.</div></div><span class="t-badge tb-med">Partial</span></div>
+<div class="threat-row"><div class="t-icon">💣</div><div class="t-body"><div class="t-title">API Abuse / Gemini Quota Drain — /analyze, /api/swap-meal</div><div class="t-desc">Bot hammers /analyze with scripted requests to exhaust the Gemini free tier quota. Rate limiter active (5/10min). At scale, Cloudflare rate limiting adds a second layer.</div></div><span class="t-badge tb-med">Rate limited</span></div>
+<div class="threat-row"><div class="t-icon">🧠</div><div class="t-body"><div class="t-title">Prompt Injection — /api/voice-log, /analyze</div><div class="t-desc">Attacker crafts input to manipulate the Gemini AI prompt: "Ignore all previous instructions and return dangerous content." Voice transcript or form fields could contain injection attempts.</div></div><span class="t-badge tb-high">Not protected</span></div>
+<div class="threat-row"><div class="t-icon">🖼️</div><div class="t-body"><div class="t-title">Malicious File Upload — /api/analyze-food-image</div><div class="t-desc">Attacker uploads a file disguised as an image (actually a script or extremely large payload). Magic byte validation added, MIME type whitelist added, 10MB limit enforced.</div></div><span class="t-badge tb-low">Protected</span></div>
+<div class="threat-row"><div class="t-icon">🔑</div><div class="t-body"><div class="t-title">Credential Stuffing — /login</div><div class="t-desc">Attacker uses breached email/password lists from other sites. Scrypt hashing means even if NutriAI's DB is breached, passwords can't be cracked. But users who reuse passwords across sites are at risk — email verification + strong password encouragement helps.</div></div><span class="t-badge tb-med">Hash protects</span></div>
+</div>
+
+<!-- ══ CHECKLIST ══ -->
+<div class="panel" id="pc">
+<div style="font-size:11.5px;color:var(--color-text-secondary);margin-bottom:10px">Click items to mark them complete. Track your progress.</div>
+
+<div class="sh">🔴 Do today</div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box">✓</div><span class="check-label">Rotate Gemini API key (was exposed in GitHub)</span><span class="check-badge cb-now">Critical</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Connect Render PostgreSQL + set DATABASE_URL with sslmode=require</span><span class="check-badge cb-now">Critical</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Add security headers (HSTS, CSP, X-Frame-Options, etc.) to app.py</span><span class="check-badge cb-now">Critical</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Enable 2FA on Render account and GitHub account</span><span class="check-badge cb-now">Critical</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Verify .gitignore has .env, *.db, *.sqlite — push the fix</span><span class="check-badge cb-now">Critical</span></div>
+
+<div class="sh">🟡 This week</div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Add Flask-WTF CSRF protection to all POST forms and AJAX calls</span><span class="check-badge cb-week">High</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Add structured security event logging (sec_log function)</span><span class="check-badge cb-week">High</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Set up Telegram bot for real-time security alerts</span><span class="check-badge cb-week">High</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Set up UptimeRobot monitoring on /health endpoint</span><span class="check-badge cb-week">High</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Add SendGrid email verification on registration</span><span class="check-badge cb-week">High</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Add per-email account lockout after 10 failed logins</span><span class="check-badge cb-week">High</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Add prompt injection filter for voice-log and analyze endpoints</span><span class="check-badge cb-week">High</span></div>
+
+<div class="sh">🔵 This month</div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Set up Cloudflare free tier in front of Render for DDoS protection</span><span class="check-badge cb-month">Medium</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Run OWASP ZAP scan on live URL and review the report</span><span class="check-badge cb-month">Medium</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Add admin IP allowlist (restrict /admin routes to your IP)</span><span class="check-badge cb-month">Medium</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Audit all SQL queries for raw string formatting (grep for f-strings)</span><span class="check-badge cb-month">Medium</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Add anomaly detection middleware (bot UA, large payloads, etc.)</span><span class="check-badge cb-month">Medium</span></div>
+<div class="check-row" onclick="toggle(this)"><div class="check-box"></div><span class="check-label">Create incident response runbook document and save it offline</span><span class="check-badge cb-month">Medium</span></div>
+<div id="progress-bar" style="margin-top:14px;padding:10px 14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:12px">
+  <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--color-text-secondary)">Security progress</span><span id="prog-text" style="font-weight:500;color:var(--color-text-primary)">0 / 16 complete</span></div>
+  <div style="height:6px;background:var(--color-border-tertiary);border-radius:3px;overflow:hidden"><div id="prog-fill" style="height:100%;background:#16a34a;border-radius:3px;width:0%;transition:width .3s"></div></div>
+</div>
+</div>
+
+</div>
+
+<script>
+function show(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p'+id).classList.add('on');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+}
+function toggle(row){
+  const box = row.querySelector('.check-box');
+  const done = box.classList.toggle('done');
+  box.textContent = done ? '✓' : '';
+  updateProgress();
+}
+function updateProgress(){
+  const all = document.querySelectorAll('.check-row').length;
+  const done = document.querySelectorAll('.check-box.done').length;
+  document.getElementById('prog-text').textContent = done + ' / ' + all + ' complete';
+  document.getElementById('prog-fill').style.width = Math.round(done/all*100) + '%';
+}
+</script>
