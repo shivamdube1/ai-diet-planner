@@ -1,0 +1,8 @@
+[build]
+  command = "echo 'Deploy handled by Render.com'"
+  publish = "."
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
